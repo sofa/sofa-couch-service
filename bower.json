@@ -1,0 +1,30 @@
+{
+  "name": "sofa-couch-service",
+  "version": "0.1.0",
+  "homepage": "http://www.sofa.io",
+  "authors": [
+    "Pascal Precht <pascal@couchcommerce.com>"
+  ],
+  "description": "Sofa Web SDK couch service component.",
+  "main": "dist/sofa.couchService.js",
+  "dependencies": {
+    "sofa-core": "0.6.x",
+    "sofa-http-service": "0.2.x",
+    "sofa-q-service": "0.1.x"
+  },
+  "devDependencies": {
+    "sofa-testing": "0.2.x",
+    "jasmine.async": "~0.1.0"
+  },
+  "resolutions": {
+    "sofa-core": "0.6.x"
+  },
+  "keywords": [
+    "sofa",
+    "sofa.io",
+    "web",
+    "sdk",
+    "service"
+  ],
+  "license": "GPL"
+}
