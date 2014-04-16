@@ -1,6 +1,6 @@
 {
   "name": "sofa-couch-service",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Sofa Web SDK couch service component.",
   "main": "dist/sofa.couchService.js",
   "scripts": {
