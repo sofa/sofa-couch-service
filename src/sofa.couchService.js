@@ -1,8 +1,19 @@
 'use strict';
 /* global sofa */
 /**
- * @name CouchService
- * @namespace sofa.CouchService
+ * @sofadoc class
+ * @name sofa.CouchService
+ *
+ * @package sofa-couch-service
+ * @requiresPackage sofa-core
+ * @requiresPackage sofa-http-service
+ * @requiresPackage sofa-q-service
+ *
+ * @requires sofa.HttpService
+ * @requires sofa.QService
+ * @requires sofa.configService
+ *
+ * @distFile dist/sofa.couchService.js
  *
  * @description
  * `CouchService` let's you interact with the CouchCommerce API. It provides methods
@@ -25,7 +36,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         CATEGORY_JSON       = configService.get('categoryJson');
 
     /**
-     * @method isAChildAliasOfB
+     * @sofadoc method
+     * @name sofa.CouchService#isAChildAliasOfB
      * @memberof sofa.CouchService
      *
      * @description
@@ -50,7 +62,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
-     * @method isAParentOfB
+     * @sofadoc method
+     * @name sofa.CouchService#isAParentOfB
      * @memberof sofa.CouchService
      *
      * @description
@@ -69,7 +82,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
-     * @method isAChildOfB
+     * @sofadoc method
+     * @name sofa.CouchService#isAChildOfB
      * @memberof sofa.CouchService
      *
      * @description
@@ -86,7 +100,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
-     * @method getCategory
+     * @sofadoc method
+     * @name sofa.CouchService#getCategory
      * @memberof sofa.CouchService
      *
      * @description
@@ -111,14 +126,15 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
-     * @method getProducts
+     * @sofadoc method
+     * @name sofa.CouchService#getProducts
      * @memberof sofa.CouchService
      *
      * @description
      * Fetches all products of a given category.
      *
      * @param {int} categoryUrlId The urlId of the category to fetch the products from.
-     * @preturn {Promise} A promise that gets resolved with products.
+     * @return {Promise} A promise that gets resolved with products.
      */
     self.getProducts = function (categoryUrlId) {
 
@@ -154,7 +170,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
-     * @method getNextProduct
+     * @sofadoc method
+     * @name sofa.CouchService#getNextProduct
      * @memberof sofa.CouchService
      *
      * @description
@@ -180,7 +197,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
-     * @method getPreviousProduct
+     * @sofadoc method
+     * @name sofa.CouchService#getPreviousProduct
      * @memberof sofa.CouchService
      *
      * @description
@@ -229,7 +247,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
 
 
     /**
-     * @method getProduct
+     * @sofadoc method
+     * @name sofa.CouchService#getProduct
      * @memberof sofa.CouchService
      *
      * @description
