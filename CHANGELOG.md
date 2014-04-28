@@ -1,3 +1,12 @@
+<a name="0.2.0"></a>
+## 0.2.0 (2014-04-28)
+
+
+#### Features
+
+* **couchService:** raise `categoryCreated` events ([ec79c601](https://github.com/sofa/sofa-couch-service/commit/ec79c6015325836bb0010bb3a6e0ba92b3d5184a))
+
+
 <a name="0.1.1"></a>
 ### 0.1.1 (2014-04-16)
 

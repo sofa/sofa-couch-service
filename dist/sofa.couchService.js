@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.1.1 - 2014-04-16
+ * sofa-couch-service - v0.2.0 - 2014-04-28
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
@@ -33,6 +33,10 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         API_HTTP_METHOD     = configService.get('apiHttpMethod', 'jsonp'),
         STORE_CODE          = configService.get('storeCode'),
         CATEGORY_JSON       = configService.get('categoryJson');
+
+
+    //allow this service to raise events
+    sofa.observable.mixin(self);
 
     /**
      * @method isAChildAliasOfB
@@ -159,7 +163,9 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
             // the backend is sending us prices as strings.
             // we need to fix that up for sorting and other things to work
             product.price = parseFloat(product.price, 10);
-            return sofa.Util.extend(new sofa.models.Product(), product);
+            var fatProduct = sofa.Util.extend(new cc.models.Product(), product);
+            self.emit('productCreated', self, fatProduct);
+            return fatProduct;
         });
     };
 
@@ -293,17 +299,21 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         return inFlightCategories;
     };
 
-    var augmentCategories = function (categories) {
+    var augmentCategories = function (rootCategory) {
         //we need to fix the urlId for the rootCategory to be empty
-        categories.urlId = '';
-        categories.isRoot = true;
-        var iterator = new sofa.util.TreeIterator(categories, 'children');
+        rootCategory.urlId = '';
+        rootCategory.isRoot = true;
+
+        self.emit('categoryCreated', self, rootCategory);
+
+        var iterator = new sofa.util.TreeIterator(rootCategory, 'children');
         iterator.iterateChildren(function (category, parent) {
             category.isRoot = category.isRoot || false;
             category.parent = parent;
             category.image = MEDIA_FOLDER + category.urlId + '.' + MEDIA_IMG_EXTENSION;
             category.hasChildren = category.children && category.children.length > 0;
             categoryMap.addCategory(category);
+            self.emit('categoryCreated', self, category);
         });
     };
 
