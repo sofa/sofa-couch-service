@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.2.0 - 2014-06-20
+ * sofa-couch-service - v0.3.0 - 2014-06-20
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
@@ -295,6 +295,11 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
             }).then(function (data) {
                 var rootCategory = data.data;
                 categoryMap = new sofa.util.CategoryMap();
+
+                rootCategory = sofa.Util.extend(new cc.models.Category({
+                    useShopUrls: USE_SHOP_URLS
+                }), rootCategory);
+
                 categoryMap.rootCategory = rootCategory;
                 augmentCategories(rootCategory);
                 return rootCategory;
@@ -308,10 +313,6 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         //we need to fix the urlId for the rootCategory to be empty
         rootCategory.urlId = '';
         rootCategory.isRoot = true;
-
-        rootCategory = sofa.Util.extend(new cc.models.Category({
-            useShopUrls: USE_SHOP_URLS
-        }), rootCategory);
 
         self.emit('categoryCreated', self, rootCategory);
 
