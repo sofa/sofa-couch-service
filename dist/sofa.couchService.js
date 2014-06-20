@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.2.0 - 2014-04-28
+ * sofa-couch-service - v0.2.0 - 2014-06-20
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
@@ -28,6 +28,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
 
     var MEDIA_FOLDER        = configService.get('mediaFolder'),
         MEDIA_IMG_EXTENSION = configService.get('mediaImgExtension'),
+        MEDIA_PLACEHOLDER   = configService.get('mediaPlaceholder'),
+        USE_SHOP_URLS       = configService.get('useShopUrls', false),
         API_URL             = configService.get('apiUrl'),
         //this is not exposed to the SAAS hosted product, hence the default value
         API_HTTP_METHOD     = configService.get('apiHttpMethod', 'jsonp'),
@@ -163,7 +165,10 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
             // the backend is sending us prices as strings.
             // we need to fix that up for sorting and other things to work
             product.price = parseFloat(product.price, 10);
-            var fatProduct = sofa.Util.extend(new cc.models.Product(), product);
+            var fatProduct = sofa.Util.extend(new cc.models.Product({
+                mediaPlaceholder: MEDIA_PLACEHOLDER,
+                useShopUrls: USE_SHOP_URLS
+            }), product);
             self.emit('productCreated', self, fatProduct);
             return fatProduct;
         });
@@ -304,6 +309,10 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         rootCategory.urlId = '';
         rootCategory.isRoot = true;
 
+        rootCategory = sofa.Util.extend(new cc.models.Category({
+            useShopUrls: USE_SHOP_URLS
+        }), rootCategory);
+
         self.emit('categoryCreated', self, rootCategory);
 
         var iterator = new sofa.util.TreeIterator(rootCategory, 'children');
@@ -312,6 +321,11 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
             category.parent = parent;
             category.image = MEDIA_FOLDER + category.urlId + '.' + MEDIA_IMG_EXTENSION;
             category.hasChildren = category.children && category.children.length > 0;
+
+            category = sofa.Util.extend(new cc.models.Category({
+                useShopUrls: USE_SHOP_URLS
+            }), category);
+
             categoryMap.addCategory(category);
             self.emit('categoryCreated', self, category);
         });
