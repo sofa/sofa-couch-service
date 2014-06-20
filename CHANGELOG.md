@@ -1,3 +1,12 @@
+<a name="0.3.2"></a>
+### 0.3.2 (2014-06-20)
+
+
+#### Bug Fixes
+
+* ***:** don't fuck up the references ([3df429d9](https://github.com/sofa/sofa-couch-service/commit/3df429d9fb032d83f5691db5236b01de07fa0360))
+
+
 <a name="0.3.1"></a>
 ### 0.3.1 (2014-06-20)
 
