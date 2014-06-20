@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.3.0 - 2014-06-20
+ * sofa-couch-service - v0.3.1 - 2014-06-20
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
@@ -296,9 +296,13 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
                 var rootCategory = data.data;
                 categoryMap = new sofa.util.CategoryMap();
 
-                rootCategory = sofa.Util.extend(new cc.models.Category({
+                // we need to do the extend in that order even so it means
+                // that we copy methods over. For the rootCategory, we could
+                // probably reverse the order but we keep it this way for consistency.
+                // Read beneath for more info.
+                rootCategory = sofa.Util.extend(rootCategory, new cc.models.Category({
                     useShopUrls: USE_SHOP_URLS
-                }), rootCategory);
+                }));
 
                 categoryMap.rootCategory = rootCategory;
                 augmentCategories(rootCategory);
@@ -323,9 +327,17 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
             category.image = MEDIA_FOLDER + category.urlId + '.' + MEDIA_IMG_EXTENSION;
             category.hasChildren = category.children && category.children.length > 0;
 
-            category = sofa.Util.extend(new cc.models.Category({
+            // we have to do the extend in this order. It's a bit unfortunate
+            // because that means that all methods of cc.modelCategory end up
+            // *directly* on the object rather than on it's prototype which would
+            // be better in terms of memory consumption (like we do it for products).
+            //
+            // We can't do that however because of the way we iterate through the tree.
+            // We would invalidate references between the objects which in turn breaks
+            // other code that relies on references to match.
+            category = sofa.Util.extend(category, new cc.models.Category({
                 useShopUrls: USE_SHOP_URLS
-            }), category);
+            }));
 
             categoryMap.addCategory(category);
             self.emit('categoryCreated', self, category);
