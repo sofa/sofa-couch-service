@@ -1,56 +1,56 @@
 {
-  "name": "sofa-couch-service",
-  "version": "0.3.2",
-  "description": "Sofa Web SDK couch service component.",
-  "main": "dist/sofa.couchService.js",
-  "scripts": {
-    "test": "bower install && grunt build"
-  },
-  "engines": {
-    "node": ">=0.10.x",
-    "npm": ">=1.2.x"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/sofa/sofa-couch-service"
-  },
-  "keywords": [
-    "sofa",
-    "sofa.io",
-    "web",
-    "sdk",
-    "service"
-  ],
-  "author": "Pascal Precht <pascal@couchcommerce.com>",
-  "license": "GPL",
-  "bugs": {
-    "url": "https://github.com/sofa/sofa-couch-service/issues"
-  },
-  "dependencies": {
-    "sofa-core": "0.8.x",
-    "sofa-http-service": "0.2.x",
-    "sofa-q-service": "0.1.x"
-  },
-  "devDependencies": {
-    "grunt": "^0.4.5",
-    "grunt-contrib-uglify": "~0.2.4",
-    "grunt-html2js": "~0.1.4",
-    "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-copy": "~0.5.0",
-    "grunt-contrib-jshint": "~0.8.0",
-    "load-grunt-tasks": "~0.2.1",
-    "grunt-karma": "~0.6.2",
-    "grunt-contrib-cssmin": "~0.7.0",
-    "grunt-ngmin": "0.0.3",
-    "grunt-contrib-watch": "~0.5.3",
-    "grunt-contrib-clean": "~0.5.0",
-    "lodash": "~2.4.1",
-    "grunt-contrib-sass": "~0.7.2",
-    "grunt-cli": "~0.1.13",
-    "karma": "~0.10.9",
-    "bower": "~1.2.8",
-    "grunt-conventional-changelog": "~1.1.0",
-    "sofa-testing": "0.2.x",
-    "grunt-deploy-semver": "^0.3.0"
-  }
+    "name": "sofa-couch-service",
+    "version": "0.4.0",
+    "description": "Sofa Web SDK couch service component.",
+    "main": "dist/sofa.couchService.js",
+    "scripts": {
+        "test": "bower install && grunt build"
+    },
+    "engines": {
+        "node": ">=0.10.x",
+        "npm": ">=1.2.x"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sofa/sofa-couch-service"
+    },
+    "keywords": [
+        "sofa",
+        "sofa.io",
+        "web",
+        "sdk",
+        "service"
+    ],
+    "author": "Pascal Precht <pascal@couchcommerce.com>",
+    "license": "GPL",
+    "bugs": {
+        "url": "https://github.com/sofa/sofa-couch-service/issues"
+    },
+    "dependencies": {
+        "sofa-core": "0.8.x",
+        "sofa-http-service": "0.2.x",
+        "sofa-q-service": "0.1.x"
+    },
+    "devDependencies": {
+        "grunt": "^0.4.5",
+        "grunt-contrib-uglify": "~0.2.4",
+        "grunt-html2js": "~0.1.4",
+        "grunt-contrib-concat": "~0.3.0",
+        "grunt-contrib-copy": "~0.5.0",
+        "grunt-contrib-jshint": "~0.8.0",
+        "load-grunt-tasks": "~0.2.1",
+        "grunt-karma": "~0.6.2",
+        "grunt-contrib-cssmin": "~0.7.0",
+        "grunt-ngmin": "0.0.3",
+        "grunt-contrib-watch": "~0.5.3",
+        "grunt-contrib-clean": "~0.5.0",
+        "lodash": "~2.4.1",
+        "grunt-contrib-sass": "~0.7.2",
+        "grunt-cli": "~0.1.13",
+        "karma": "~0.10.9",
+        "bower": "~1.2.8",
+        "grunt-conventional-changelog": "~1.1.0",
+        "sofa-testing": "0.2.x",
+        "grunt-deploy-semver": "^0.3.0"
+    }
 }

@@ -1,3 +1,17 @@
+<a name="0.4.0"></a>
+## 0.4.0 (2014-06-23)
+
+
+#### Bug Fixes
+
+* ***:** don't fuck up the references ([3df429d9](https://github.com/sofa/sofa-couch-service/commit/3df429d9fb032d83f5691db5236b01de07fa0360))
+
+
+#### Features
+
+* **grunt:** better deploying ([bf21b949](https://github.com/sofa/sofa-couch-service/commit/bf21b9490581014a629ea2318ff57ed3f05cbc50))
+
+
 <a name="0.3.2"></a>
 ### 0.3.2 (2014-06-20)
 
