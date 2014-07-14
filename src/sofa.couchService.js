@@ -13,6 +13,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     var self = {},
         products = {},
         productComparer = new sofa.comparer.ProductComparer(),
+        categoryTreeResolver = new sofa.CategoryTreeResolver($http, $q, configService),
         categoryMap = null,
         inFlightCategories = null;
 
@@ -23,8 +24,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         API_URL             = configService.get('apiUrl'),
         //this is not exposed to the SAAS hosted product, hence the default value
         API_HTTP_METHOD     = configService.get('apiHttpMethod', 'jsonp'),
-        STORE_CODE          = configService.get('storeCode'),
-        CATEGORY_JSON       = configService.get('categoryJson');
+        STORE_CODE          = configService.get('storeCode');
 
 
     //allow this service to raise events
@@ -279,10 +279,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         //TODO: at tests for this!
 
         if (!inFlightCategories) {
-            inFlightCategories = $http({
-                method: 'get',
-                url: CATEGORY_JSON
-            }).then(function (data) {
+            inFlightCategories = categoryTreeResolver().then(function (data) {
                 var rootCategory = data.data;
                 categoryMap = new sofa.util.CategoryMap();
 
