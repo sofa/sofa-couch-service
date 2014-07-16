@@ -5,7 +5,7 @@
  * @namespace sofa.CategoryTreeResolver
  *
  * @description
- * `CategoryTreeResolver` is used within the`CouchServic` to resolve the tree of categories.
+ * `CategoryTreeResolver` is used within the`CouchService` to resolve the tree of categories.
  * It can easily be overwritten to swap out the resolve strategy.
  */
 sofa.define('sofa.CategoryTreeResolver', function ($http, $q, configService) {

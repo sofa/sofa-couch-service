@@ -10,22 +10,19 @@
  */
 sofa.define('sofa.CouchService', function ($http, $q, configService) {
 
-    var self = {},
-        products = {},
-        productComparer = new sofa.comparer.ProductComparer(),
+    var self                 = {},
+        products             = {},
+        productComparer      = new sofa.comparer.ProductComparer(),
         categoryTreeResolver = new sofa.CategoryTreeResolver($http, $q, configService),
-        categoryMap = null,
-        inFlightCategories = null;
+        productBatchResolver = new sofa.ProductBatchResolver($http, $q, configService),
+        productDecorator     = new sofa.ProductDecorator(configService),
+        categoryMap          = null,
+        inFlightCategories   = null;
 
-    var MEDIA_FOLDER        = configService.get('mediaFolder'),
-        MEDIA_IMG_EXTENSION = configService.get('mediaImgExtension'),
-        MEDIA_PLACEHOLDER   = configService.get('mediaPlaceholder'),
-        USE_SHOP_URLS       = configService.get('useShopUrls', false),
-        API_URL             = configService.get('apiUrl'),
-        //this is not exposed to the SAAS hosted product, hence the default value
-        API_HTTP_METHOD     = configService.get('apiHttpMethod', 'jsonp'),
-        STORE_CODE          = configService.get('storeCode');
-
+    var MEDIA_FOLDER         = configService.get('mediaFolder'),
+        MEDIA_IMG_EXTENSION  = configService.get('mediaImgExtension'),
+        MEDIA_PLACEHOLDER    = configService.get('mediaPlaceholder'),
+        USE_SHOP_URLS        = configService.get('useShopUrls', false);
 
     //allow this service to raise events
     sofa.observable.mixin(self);
@@ -129,15 +126,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     self.getProducts = function (categoryUrlId) {
 
         if (!products[categoryUrlId]) {
-            return $http({
-                method: API_HTTP_METHOD,
-                url: API_URL +
-                '?&stid=' +
-                STORE_CODE +
-                '&cat=' + categoryUrlId +
-                '&callback=JSON_CALLBACK'
-            }).then(function (data) {
-                var tempProducts = augmentProducts(data.data.products, categoryUrlId);
+            return productBatchResolver(categoryUrlId).then(function (productsArray) {
+                var tempProducts = augmentProducts(productsArray, categoryUrlId);
                 //FixMe we are effectively creating a memory leak here by caching all
                 //seen products forever. This needs to be more sophisticated
                 products[categoryUrlId] = tempProducts;
@@ -151,10 +141,11 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     //directly on our server API so that this extra processing can be removed.
     var augmentProducts = function (products, categoryUrlId) {
         return products.map(function (product) {
+            // apply any defined decorations
+            product = productDecorator(product);
+
             product.categoryUrlId = categoryUrlId;
-            // the backend is sending us prices as strings.
-            // we need to fix that up for sorting and other things to work
-            product.price = parseFloat(product.price, 10);
+
             var fatProduct = sofa.Util.extend(new cc.models.Product({
                 mediaPlaceholder: MEDIA_PLACEHOLDER,
                 useShopUrls: USE_SHOP_URLS
