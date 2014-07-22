@@ -10,19 +10,21 @@
  */
 sofa.define('sofa.CouchService', function ($http, $q, configService) {
 
-    var self                 = {},
-        products             = {},
-        productComparer      = new sofa.comparer.ProductComparer(),
-        categoryTreeResolver = new sofa.CategoryTreeResolver($http, $q, configService),
-        productBatchResolver = new sofa.ProductBatchResolver($http, $q, configService),
-        productDecorator     = new sofa.ProductDecorator(configService),
-        categoryMap          = null,
-        inFlightCategories   = null;
+    var self                    = {},
+        productComparer         = new sofa.comparer.ProductComparer(),
+        categoryTreeResolver    = new sofa.CategoryTreeResolver($http, $q, configService),
+        productBatchResolver    = new sofa.ProductBatchResolver($http, $q, configService),
+        productDecorator        = new sofa.ProductDecorator(configService),
+        productByKeyCache       = new sofa.InMemoryObjectStore(),
+        productsByCriteriaCache = new sofa.InMemoryObjectStore(),
+        hashService             = new sofa.HashService(),
+        categoryMap             = null,
+        inFlightCategories      = null;
 
-    var MEDIA_FOLDER         = configService.get('mediaFolder'),
-        MEDIA_IMG_EXTENSION  = configService.get('mediaImgExtension'),
-        MEDIA_PLACEHOLDER    = configService.get('mediaPlaceholder'),
-        USE_SHOP_URLS        = configService.get('useShopUrls', false);
+    var MEDIA_FOLDER            = configService.get('mediaFolder'),
+        MEDIA_IMG_EXTENSION     = configService.get('mediaImgExtension'),
+        MEDIA_PLACEHOLDER       = configService.get('mediaPlaceholder'),
+        USE_SHOP_URLS           = configService.get('useShopUrls', false);
 
     //allow this service to raise events
     sofa.observable.mixin(self);
@@ -113,6 +115,10 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         }
     };
 
+    var getUrlKey = function (product) {
+        return product.categoryUrlId + product.urlKey;
+    };
+
     /**
      * @method getProducts
      * @memberof sofa.CouchService
@@ -123,18 +129,27 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      * @param {int} categoryUrlId The urlId of the category to fetch the products from.
      * @preturn {Promise} A promise that gets resolved with products.
      */
-    self.getProducts = function (categoryUrlId) {
+    self.getProducts = function (categoryUrlId, config) {
 
-        if (!products[categoryUrlId]) {
-            return productBatchResolver(categoryUrlId).then(function (productsArray) {
+        var cacheKey = hashService.hashObject({
+            categoryUrlId: categoryUrlId,
+            config: config
+        });
+
+        if (!productsByCriteriaCache.exists(cacheKey)) {
+            return productBatchResolver(categoryUrlId, config).then(function (productsArray) {
                 var tempProducts = augmentProducts(productsArray, categoryUrlId);
-                //FixMe we are effectively creating a memory leak here by caching all
-                //seen products forever. This needs to be more sophisticated
-                products[categoryUrlId] = tempProducts;
-                return tempProducts;
+
+                var indexedProducts = productByKeyCache.addOrUpdateBatch(tempProducts, getUrlKey);
+
+                // FixMe we are effectively creating a memory leak here by caching all seen products forever
+                productsByCriteriaCache.addOrUpdate(cacheKey, indexedProducts);
+
+                return indexedProducts;
             });
         }
-        return $q.when(products[categoryUrlId]);
+
+        return $q.when(productsByCriteriaCache.get(cacheKey));
     };
 
     //it's a bit akward that we need to do that. It should be adressed
@@ -209,7 +224,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     var getPreviousOrNextProduct = function (product, circle, productFindFn) {
-        var cachedProducts = products[product.categoryUrlId];
+        var cachedProducts = productsByCriteriaCache.get(product.categoryUrlId);
 
         if (cachedProducts) {
             return $q.when(productFindFn(cachedProducts, product));
@@ -229,7 +244,6 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         return -1;
     };
 
-
     /**
      * @method getProduct
      * @memberof sofa.CouchService
@@ -244,22 +258,15 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      * @return {object} product
      */
     self.getProduct = function (categoryUrlId, productUrlId) {
-        if (!products[categoryUrlId]) {
-            return  self.getProducts(categoryUrlId).then(function (data) {
-                return getProduct(data, productUrlId);
+        var productCacheKey = categoryUrlId + productUrlId;
+        if (!productByKeyCache.exists(productCacheKey)) {
+            return self.getProducts(categoryUrlId).then(function () {
+                return self.getProduct(categoryUrlId, productUrlId);
             });
         }
-        return $q.when(getProduct(products[categoryUrlId], productUrlId));
-    };
-
-    var getProduct = function (products, productUrlId) {
-        for (var i = 0; i < products.length; i++) {
-            var product = products[i];
-            if (product.urlKey === productUrlId) {
-                return product;
-            }
+        else {
+            return $q.when(productByKeyCache.get(productCacheKey));
         }
-        return null;
     };
 
     var fetchAllCategories = function () {

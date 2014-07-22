@@ -197,6 +197,42 @@ describe('sofa.couchService', function () {
                 });
         });
 
+        async.it('removes products that violate duplicate key constraints', function (done) {
+
+            // both products conflict with their urlKey. The urlKey is all we care about
+            // the id is pretty irrelevant for sofa. Sofa has to treat the urlKey like an unique id.
+            var responseWithConflictingKeys = {
+                'queryDetails': {
+                    'category': 'main',
+                    'categoryName': 'Root',
+                    'showSizeFilter': 'true',
+                    'showColorFilter': 'true'
+                },
+                'totalCount': '2',
+                'products': [
+                        {'id': 1036, 'sku': '1172', 'name': 'foo', 'description': 'foo', 'urlKey': 'foo' },
+                        {'id': 1036, 'sku': '1172', 'name': 'foo', 'description': 'foo', 'urlKey': 'foo' }
+                    ]
+                };
+
+            var categoryUrlId = 'root';
+            //it's a bit whack that we have to know the exact URL to mock the http request
+            //but on the other hand, how should it work otherwise?
+            var url = sofa.Config.apiUrl +
+                        '?&stid=' +
+                        sofa.Config.storeCode +
+                        '&cat=' + categoryUrlId +
+                        '&callback=JSON_CALLBACK';
+
+            httpService.when(sofa.Config.apiHttpMethod, url).respond(responseWithConflictingKeys);
+            couchService
+                .getProducts(categoryUrlId)
+                .then(function (data) {
+                    expect(data.length).toBe(1);
+                    done();
+                });
+        });
+
         async.it('can get a single product', function (done) {
             var categoryUrlId = 'root';
             var productUrlId = 'fassbind-vieille-prune-obstbrand-pflaume-40-0-7l-flasche';
@@ -217,6 +253,61 @@ describe('sofa.couchService', function () {
                     expect(product.id).toEqual(204);
                     done();
                 });
+        });
+
+        async.it('product instances of same products are always equal', function (done) {
+            var firstBatch, secondBatch, singleProduct;
+
+            var url = sofa.Config.apiUrl +
+                        '?&stid=' +
+                        sofa.Config.storeCode +
+                        '&cat=root' +
+                        '&callback=JSON_CALLBACK';
+
+            httpService.when(sofa.Config.apiHttpMethod, url).respond(SOFA_MOCK_PRODUCTS);
+
+            var firstAction = couchService
+                .getProducts('root', { order: 'asc' })
+                .then(function (data) {
+                    expect(data.length).toBe(16);
+                    firstBatch = data;
+                });
+
+            var secondAction = couchService
+                .getProducts('root', { order: 'desc' })
+                .then(function (data) {
+                    expect(data.length).toBe(16);
+                    secondBatch = data;
+                });
+
+            var thirdAction = couchService
+                .getProduct('root', 'fassbind-brut-de-fut-williams-obstbrand-53-2-0-5-l-flasche')
+                .then(function (data) {
+                    singleProduct = data;
+                });
+            q
+            .all(firstAction, secondAction, thirdAction)
+            .then(function () {
+                // This makes sure that we tricked the couchService correctly to
+                // perform multiple requests. We don't want instances to be
+                // served from cache for this test!
+
+                // Currently this will result in only two requests because
+                // obviously the product is served from cache for the 
+                // `getProduct` call. Once we have a proper
+                // load-a-single-product-without-loading-the-entire-product-set strategy
+                // we can twist the call plan to first fetch the single product, 
+                // and after that perform the other two calls. This will then result
+                // in three http calls while still the instances should all be the same.
+
+                expect(httpService.getCounter().requestCount).toBe(2);
+                
+                // test that those are really the same instances
+                expect(firstBatch[0]).toBe(secondBatch[0]);
+                expect(firstBatch[0]).toBe(singleProduct);
+
+                done();
+            });
         });
 
         async.it('can get the next product of the same category (with cached products)', function (done) {

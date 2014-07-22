@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.6.0 - 2014-07-16
+ * sofa-couch-service - v0.6.0 - 2014-07-23
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
@@ -20,19 +20,21 @@
  */
 sofa.define('sofa.CouchService', function ($http, $q, configService) {
 
-    var self                 = {},
-        products             = {},
-        productComparer      = new sofa.comparer.ProductComparer(),
-        categoryTreeResolver = new sofa.CategoryTreeResolver($http, $q, configService),
-        productBatchResolver = new sofa.ProductBatchResolver($http, $q, configService),
-        productDecorator     = new sofa.ProductDecorator(configService),
-        categoryMap          = null,
-        inFlightCategories   = null;
+    var self                    = {},
+        productComparer         = new sofa.comparer.ProductComparer(),
+        categoryTreeResolver    = new sofa.CategoryTreeResolver($http, $q, configService),
+        productBatchResolver    = new sofa.ProductBatchResolver($http, $q, configService),
+        productDecorator        = new sofa.ProductDecorator(configService),
+        productByKeyCache       = new sofa.InMemoryObjectStore(),
+        productsByCriteriaCache = new sofa.InMemoryObjectStore(),
+        hashService             = new sofa.HashService(),
+        categoryMap             = null,
+        inFlightCategories      = null;
 
-    var MEDIA_FOLDER         = configService.get('mediaFolder'),
-        MEDIA_IMG_EXTENSION  = configService.get('mediaImgExtension'),
-        MEDIA_PLACEHOLDER    = configService.get('mediaPlaceholder'),
-        USE_SHOP_URLS        = configService.get('useShopUrls', false);
+    var MEDIA_FOLDER            = configService.get('mediaFolder'),
+        MEDIA_IMG_EXTENSION     = configService.get('mediaImgExtension'),
+        MEDIA_PLACEHOLDER       = configService.get('mediaPlaceholder'),
+        USE_SHOP_URLS           = configService.get('useShopUrls', false);
 
     //allow this service to raise events
     sofa.observable.mixin(self);
@@ -123,6 +125,10 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         }
     };
 
+    var getUrlKey = function (product) {
+        return product.categoryUrlId + product.urlKey;
+    };
+
     /**
      * @method getProducts
      * @memberof sofa.CouchService
@@ -133,18 +139,27 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      * @param {int} categoryUrlId The urlId of the category to fetch the products from.
      * @preturn {Promise} A promise that gets resolved with products.
      */
-    self.getProducts = function (categoryUrlId) {
+    self.getProducts = function (categoryUrlId, config) {
 
-        if (!products[categoryUrlId]) {
-            return productBatchResolver(categoryUrlId).then(function (productsArray) {
+        var cacheKey = hashService.hashObject({
+            categoryUrlId: categoryUrlId,
+            config: config
+        });
+
+        if (!productsByCriteriaCache.exists(cacheKey)) {
+            return productBatchResolver(categoryUrlId, config).then(function (productsArray) {
                 var tempProducts = augmentProducts(productsArray, categoryUrlId);
-                //FixMe we are effectively creating a memory leak here by caching all
-                //seen products forever. This needs to be more sophisticated
-                products[categoryUrlId] = tempProducts;
-                return tempProducts;
+
+                var indexedProducts = productByKeyCache.addOrUpdateBatch(tempProducts, getUrlKey);
+
+                // FixMe we are effectively creating a memory leak here by caching all seen products forever
+                productsByCriteriaCache.addOrUpdate(cacheKey, indexedProducts);
+
+                return indexedProducts;
             });
         }
-        return $q.when(products[categoryUrlId]);
+
+        return $q.when(productsByCriteriaCache.get(cacheKey));
     };
 
     //it's a bit akward that we need to do that. It should be adressed
@@ -219,7 +234,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     var getPreviousOrNextProduct = function (product, circle, productFindFn) {
-        var cachedProducts = products[product.categoryUrlId];
+        var cachedProducts = productsByCriteriaCache.get(product.categoryUrlId);
 
         if (cachedProducts) {
             return $q.when(productFindFn(cachedProducts, product));
@@ -239,7 +254,6 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         return -1;
     };
 
-
     /**
      * @method getProduct
      * @memberof sofa.CouchService
@@ -254,22 +268,15 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      * @return {object} product
      */
     self.getProduct = function (categoryUrlId, productUrlId) {
-        if (!products[categoryUrlId]) {
-            return  self.getProducts(categoryUrlId).then(function (data) {
-                return getProduct(data, productUrlId);
+        var productCacheKey = categoryUrlId + productUrlId;
+        if (!productByKeyCache.exists(productCacheKey)) {
+            return self.getProducts(categoryUrlId).then(function () {
+                return self.getProduct(categoryUrlId, productUrlId);
             });
         }
-        return $q.when(getProduct(products[categoryUrlId], productUrlId));
-    };
-
-    var getProduct = function (products, productUrlId) {
-        for (var i = 0; i < products.length; i++) {
-            var product = products[i];
-            if (product.urlKey === productUrlId) {
-                return product;
-            }
+        else {
+            return $q.when(productByKeyCache.get(productCacheKey));
         }
-        return null;
     };
 
     var fetchAllCategories = function () {
@@ -337,6 +344,65 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
 
 'use strict';
 /* global sofa */
+
+/**
+ * @name InMemoryObjectStore
+ * @namespace sofa.InMemoryObjectStore
+ *
+ * @description
+ * A simple object store that allows storing, updating objects in memory.
+ * The object store asures that updated objects will always keep the instance
+ * that was created first. In other words, objects are patched to be updated
+ * rather than replaced.
+ */
+sofa.InMemoryObjectStore = function () {
+
+    var self = {},
+        cache = {};
+
+    self.addOrUpdate = function (key, item) {
+
+        if (!cache[key]) {
+            cache[key] = item;
+        }
+        else {
+            sofa.Util.extend(cache[key], item);
+        }
+
+        return cache[key];
+    };
+
+    self.addOrUpdateBatch = function (batch, keyExtractor) {
+        var added = [];
+        var keys = {};
+
+        batch.forEach(function (item) {
+            var key = keyExtractor(item);
+
+            // it is not allowed for one batch to contain multiple objects
+            // with the same key
+            if (!keys[key]) {
+                var updatedItem = self.addOrUpdate(key, item);
+                added.push(updatedItem);
+                keys[key] = true;
+            }
+        });
+
+        return added;
+    };
+
+    self.get = function (key) {
+        return cache[key];
+    };
+
+    self.exists = function (key) {
+        return self.get(key) !== undefined;
+    };
+
+    return self;
+};
+'use strict';
+/* global sofa */
 /**
  * @name CategoryTreeResolver
  * @namespace sofa.CategoryTreeResolver
@@ -375,6 +441,37 @@ sofa.define('sofa.comparer.ProductComparer', function () {
     };
 });
 
+'use strict';
+/* global sofa */
+/*jshint bitwise: false*/
+
+//TODO: make this a real self contained sofa service
+sofa.HashService = function () {
+
+    var self = {};
+
+    // http://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery
+    self.hashString = function (str) {
+        var hash = 0, i, chr, len;
+        if (str.length === 0) {
+            return hash;
+        }
+
+        for (i = 0, len = str.length; i < len; i++) {
+            chr   = str.charCodeAt(i);
+            hash  = ((hash << 5) - hash) + chr;
+            hash |= 0; // Convert to 32bit integer
+        }
+
+        return hash.toString();
+    };
+
+    self.hashObject = function (obj) {
+        return self.hashString(JSON.stringify(obj));
+    };
+
+    return self;
+};
 'use strict';
 /* global sofa */
 /**

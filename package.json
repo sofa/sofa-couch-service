@@ -29,7 +29,7 @@
     "dependencies": {
         "sofa-core": "0.8.x",
         "sofa-http-service": "0.2.x",
-        "sofa-q-service": "0.1.x"
+        "sofa-q-service": "0.2.x"
     },
     "devDependencies": {
         "grunt": "^0.4.5",
@@ -50,7 +50,7 @@
         "karma": "~0.10.9",
         "bower": "~1.2.8",
         "grunt-conventional-changelog": "~1.1.0",
-        "sofa-testing": "0.2.x",
+        "sofa-testing": "0.7.x",
         "grunt-deploy-semver": "^0.3.0"
     }
 }
