@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.6.0 - 2014-07-23
+ * sofa-couch-service - v0.7.0 - 2014-07-23
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
@@ -360,6 +360,18 @@ sofa.InMemoryObjectStore = function () {
     var self = {},
         cache = {};
 
+    /**
+     * @method addOrUpdate
+     * @memberof sofa.InMemoryObjectStore
+     *
+     * @description
+     * Adds or updates an object in the store. For updates, it is guaranteed that no
+     * new instance is created. The initial instance is patched
+     *
+     * @param {key} Key of the object to add/update
+     * @param {item} The object to add/update
+     * @preturn {object} The stored object
+     */
     self.addOrUpdate = function (key, item) {
 
         if (!cache[key]) {
@@ -372,6 +384,18 @@ sofa.InMemoryObjectStore = function () {
         return cache[key];
     };
 
+    /**
+     * @method addOrUpdateBatch
+     * @memberof sofa.InMemoryObjectStore
+     *
+     * @description
+     * Adds or updates a batch of objects in the store. For updates, it is guaranteed that no
+     * new instance are created. The initial instances are patched
+     *
+     * @param {batch} array of objects to add/update
+     * @param {keyExctractor} A function to extract the key of each item in the batch
+     * @preturn {array} An array containing each created/updated instance
+     */
     self.addOrUpdateBatch = function (batch, keyExtractor) {
         var added = [];
         var keys = {};
@@ -391,10 +415,30 @@ sofa.InMemoryObjectStore = function () {
         return added;
     };
 
+    /**
+     * @method get
+     * @memberof sofa.InMemoryObjectStore
+     *
+     * @description
+     * Retrieves an object from the store
+     *
+     * @param {key} The key of the object to retrieve
+     * @preturn {object} The retrieved object
+     */
     self.get = function (key) {
         return cache[key];
     };
 
+    /**
+     * @method exists
+     * @memberof sofa.InMemoryObjectStore
+     *
+     * @description
+     * Checks if an object exists in the store
+     *
+     * @param {key} The key of the object to check for existence
+     * @preturn {boolean} A boolean to indicate whether the object exists or not
+     */
     self.exists = function (key) {
         return self.get(key) !== undefined;
     };
@@ -445,13 +489,30 @@ sofa.define('sofa.comparer.ProductComparer', function () {
 /* global sofa */
 /*jshint bitwise: false*/
 
-//TODO: make this a real self contained sofa service
+/**
+ * @name HashService
+ * @namespace sofa.HashService
+ *
+ * @description
+ * A service that creates hashes for strings or objects. This might be refactored
+ * into a self contained sofa service in the future.
+ */
 sofa.HashService = function () {
 
     var self = {};
 
-    // http://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery
+    /**
+     * @method hashString
+     * @memberof sofa.HashService
+     *
+     * @description
+     * Creates a hash for the given string
+     *
+     * @param {str} The string to base the hash on
+     * @preturn {str} The hash
+     */
     self.hashString = function (str) {
+        // http://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery
         var hash = 0, i, chr, len;
         if (str.length === 0) {
             return hash;
@@ -466,6 +527,16 @@ sofa.HashService = function () {
         return hash.toString();
     };
 
+    /**
+     * @method hashObject
+     * @memberof sofa.HashService
+     *
+     * @description
+     * Creates a hash for the given object
+     *
+     * @param {obj} The object to base the hash on
+     * @preturn {str} The hash
+     */
     self.hashObject = function (obj) {
         return self.hashString(JSON.stringify(obj));
     };

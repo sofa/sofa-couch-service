@@ -1,3 +1,12 @@
+<a name="0.7.0"></a>
+## 0.7.0 (2014-07-23)
+
+
+#### Features
+
+* **couchService:** more sophisticated caching ([19f219d4](https://github.com/sofa/sofa-couch-service/commit/19f219d489dc1919017251be657ea9aa55ebbbbf))
+
+
 <a name="0.6.0"></a>
 ## 0.6.0 (2014-07-16)
 
