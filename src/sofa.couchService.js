@@ -14,6 +14,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         productComparer         = new sofa.comparer.ProductComparer(),
         categoryTreeResolver    = new sofa.CategoryTreeResolver($http, $q, configService),
         productBatchResolver    = new sofa.ProductBatchResolver($http, $q, configService),
+        singleProductResolver   = new sofa.SingleProductResolver(self, $http, $q, configService),
         productDecorator        = new sofa.ProductDecorator(configService),
         productByKeyCache       = new sofa.InMemoryObjectStore(),
         productsByCriteriaCache = new sofa.InMemoryObjectStore(),
@@ -260,9 +261,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     self.getProduct = function (categoryUrlId, productUrlId) {
         var productCacheKey = categoryUrlId + productUrlId;
         if (!productByKeyCache.exists(productCacheKey)) {
-            return self.getProducts(categoryUrlId).then(function () {
-                return self.getProduct(categoryUrlId, productUrlId);
-            });
+            return singleProductResolver(categoryUrlId, productUrlId);
         }
         else {
             return $q.when(productByKeyCache.get(productCacheKey));

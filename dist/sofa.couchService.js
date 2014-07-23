@@ -24,6 +24,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         productComparer         = new sofa.comparer.ProductComparer(),
         categoryTreeResolver    = new sofa.CategoryTreeResolver($http, $q, configService),
         productBatchResolver    = new sofa.ProductBatchResolver($http, $q, configService),
+        singleProductResolver   = new sofa.SingleProductResolver(self, $http, $q, configService),
         productDecorator        = new sofa.ProductDecorator(configService),
         productByKeyCache       = new sofa.InMemoryObjectStore(),
         productsByCriteriaCache = new sofa.InMemoryObjectStore(),
@@ -270,9 +271,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     self.getProduct = function (categoryUrlId, productUrlId) {
         var productCacheKey = categoryUrlId + productUrlId;
         if (!productByKeyCache.exists(productCacheKey)) {
-            return self.getProducts(categoryUrlId).then(function () {
-                return self.getProduct(categoryUrlId, productUrlId);
-            });
+            return singleProductResolver(categoryUrlId, productUrlId);
         }
         else {
             return $q.when(productByKeyCache.get(productCacheKey));
@@ -652,6 +651,27 @@ sofa.define('sofa.ProductDecorator', function () {
         product.price = parseFloat(product.price, 10);
 
         return product;
+    };
+});
+
+'use strict';
+/* global sofa */
+/**
+ * @name SingleProductResolver
+ * @namespace sofa.SingleProductResolver
+ *
+ * @description
+ * `SingleProductResolver` is used within the`CouchService` 
+ * to resolve a singke product for a given categoryUrlId + productUrlKey combination. 
+ * It can easily be overwritten to swap out the resolve strategy.
+ */
+sofa.define('sofa.SingleProductResolver', function (couchService) {
+    return function (categoryUrlId, productUrlKey) {
+        return couchService
+                .getProducts(categoryUrlId)
+                .then(function () {
+                    return couchService.getProduct(categoryUrlId, productUrlKey);
+                });
     };
 });
 
