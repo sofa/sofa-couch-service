@@ -22,7 +22,7 @@ sofa.HashService = function () {
      * Creates a hash for the given string
      *
      * @param {str} The string to base the hash on
-     * @preturn {str} The hash
+     * @return {str} The hash
      */
     self.hashString = function (str) {
         // http://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery
@@ -48,7 +48,7 @@ sofa.HashService = function () {
      * Creates a hash for the given object
      *
      * @param {obj} The object to base the hash on
-     * @preturn {str} The hash
+     * @return {str} The hash
      */
     self.hashObject = function (obj) {
         return self.hashString(JSON.stringify(obj));

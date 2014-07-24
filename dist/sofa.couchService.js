@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.8.0 - 2014-07-23
+ * sofa-couch-service - v0.8.0 - 2014-07-24
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
@@ -26,6 +26,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         productBatchResolver    = new sofa.ProductBatchResolver($http, $q, configService),
         singleProductResolver   = new sofa.SingleProductResolver(self, $http, $q, configService),
         productDecorator        = new sofa.ProductDecorator(configService),
+        pageInfoFactory         = new sofa.PageInfoFactory(configService),
         productByKeyCache       = new sofa.InMemoryObjectStore(),
         productsByCriteriaCache = new sofa.InMemoryObjectStore(),
         hashService             = new sofa.HashService(),
@@ -99,6 +100,22 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      */
     self.isAChildOfB = function (categoryA, categoryB) {
         return self.isAParentOfB(categoryB, categoryA);
+    };
+
+
+    /**
+     * @method createPageInfo
+     * @memberof sofa.CouchService
+     *
+     * @description
+     * Creates a PageInfo object from a set of entities.
+     *
+     * @param {entities} An array of entities.
+     *
+     * @return {object} The PageInfo object.
+     */
+    self.createPageInfo = function (entities) {
+        return pageInfoFactory.createPageInfo(entities);
     };
 
     /**
@@ -447,6 +464,47 @@ sofa.InMemoryObjectStore = function () {
 'use strict';
 /* global sofa */
 /**
+ * @name PageInfoFactory
+ * @namespace sofa.PageInfoFactory
+ *
+ * @description
+ * The `PageInfoFactory` is used to create `PageInfo` objects which encapsulate paging data.
+ */
+sofa.define('sofa.PageInfoFactory', function (configService) {
+    var DEFAULT_PAGE_SIZE = configService.get('defaultPageSize', 10);
+
+    var PageInfo = function (size, from) {
+        this.size = size;
+        this.from = from;
+    };
+
+    PageInfo.prototype.next = function () {
+        this.from = this.from + this.size;
+        return this;
+    };
+
+    var self = {};
+
+    /**
+     * @method createPageInfo
+     * @memberof sofa.PageInfoFactory
+     *
+     * @description
+     * Creates a PageInfo object from a batch of an array of entities
+     *
+     * @param {entities} The array of entities representing the entire set
+     * @return {object} The PageInfo object
+     */
+    self.createPageInfo = function (entities) {
+        return new PageInfo(DEFAULT_PAGE_SIZE, entities.length - DEFAULT_PAGE_SIZE);
+    };
+
+    return self;
+});
+
+'use strict';
+/* global sofa */
+/**
  * @name CategoryTreeResolver
  * @namespace sofa.CategoryTreeResolver
  *
@@ -508,7 +566,7 @@ sofa.HashService = function () {
      * Creates a hash for the given string
      *
      * @param {str} The string to base the hash on
-     * @preturn {str} The hash
+     * @return {str} The hash
      */
     self.hashString = function (str) {
         // http://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery
@@ -534,7 +592,7 @@ sofa.HashService = function () {
      * Creates a hash for the given object
      *
      * @param {obj} The object to base the hash on
-     * @preturn {str} The hash
+     * @return {str} The hash
      */
     self.hashObject = function (obj) {
         return self.hashString(JSON.stringify(obj));

@@ -16,6 +16,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         productBatchResolver    = new sofa.ProductBatchResolver($http, $q, configService),
         singleProductResolver   = new sofa.SingleProductResolver(self, $http, $q, configService),
         productDecorator        = new sofa.ProductDecorator(configService),
+        pageInfoFactory         = new sofa.PageInfoFactory(configService),
         productByKeyCache       = new sofa.InMemoryObjectStore(),
         productsByCriteriaCache = new sofa.InMemoryObjectStore(),
         hashService             = new sofa.HashService(),
@@ -89,6 +90,22 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      */
     self.isAChildOfB = function (categoryA, categoryB) {
         return self.isAParentOfB(categoryB, categoryA);
+    };
+
+
+    /**
+     * @method createPageInfo
+     * @memberof sofa.CouchService
+     *
+     * @description
+     * Creates a PageInfo object from a set of entities.
+     *
+     * @param {entities} An array of entities.
+     *
+     * @return {object} The PageInfo object.
+     */
+    self.createPageInfo = function (entities) {
+        return pageInfoFactory.createPageInfo(entities);
     };
 
     /**
