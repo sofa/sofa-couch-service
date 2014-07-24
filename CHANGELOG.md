@@ -1,3 +1,12 @@
+<a name="0.9.0"></a>
+## 0.9.0 (2014-07-24)
+
+
+#### Features
+
+* **couchService:** add PageInfo abstraction ([ea782c02](https://github.com/sofa/sofa-couch-service/commit/ea782c020db54545b2e87fcf5d06ad2a598dbd8d))
+
+
 <a name="0.8.0"></a>
 ## 0.8.0 (2014-07-23)
 
