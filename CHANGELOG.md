@@ -1,3 +1,12 @@
+<a name="0.9.1"></a>
+### 0.9.1 (2014-07-30)
+
+
+#### Bug Fixes
+
+* ***:** prevent infinite XHR of death ([64e13f53](https://github.com/sofa/sofa-couch-service/commit/64e13f53d573f89477c253b391a769fc1206d6a9))
+
+
 <a name="0.9.0"></a>
 ## 0.9.0 (2014-07-24)
 
