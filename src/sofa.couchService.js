@@ -160,9 +160,13 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
 
                 var indexedProducts = productByKeyCache.addOrUpdateBatch(tempProducts, getUrlKey);
 
-                // FixMe we are effectively creating a memory leak here by caching all seen products forever
-                productsByCriteriaCache.addOrUpdate(cacheKey, indexedProducts);
-
+                // if the call did not yield results, don't put an empty array in the cache.
+                // This would prevent further XHRs for this query even if we don't have results
+                if (indexedProducts.length > 0) {
+                    // FixMe we are effectively creating a memory leak here by caching all seen products forever
+                    productsByCriteriaCache.addOrUpdate(cacheKey, indexedProducts);
+                }
+                
                 return indexedProducts;
             });
         }
