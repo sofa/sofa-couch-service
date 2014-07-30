@@ -16,6 +16,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         productBatchResolver    = new sofa.ProductBatchResolver($http, $q, configService),
         singleProductResolver   = new sofa.SingleProductResolver(self, $http, $q, configService),
         productDecorator        = new sofa.ProductDecorator(configService),
+        categoryDecorator       = new sofa.CategoryDecorator(configService),
         pageInfoFactory         = new sofa.PageInfoFactory(configService),
         productByKeyCache       = new sofa.InMemoryObjectStore(),
         productsByCriteriaCache = new sofa.InMemoryObjectStore(),
@@ -23,9 +24,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         categoryMap             = null,
         inFlightCategories      = null;
 
-    var MEDIA_FOLDER            = configService.get('mediaFolder'),
-        MEDIA_IMG_EXTENSION     = configService.get('mediaImgExtension'),
-        MEDIA_PLACEHOLDER       = configService.get('mediaPlaceholder'),
+    var MEDIA_PLACEHOLDER       = configService.get('mediaPlaceholder'),
         USE_SHOP_URLS           = configService.get('useShopUrls', false);
 
     //allow this service to raise events
@@ -329,8 +328,10 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         iterator.iterateChildren(function (category, parent) {
             category.isRoot = category.isRoot || false;
             category.parent = parent;
-            category.image = MEDIA_FOLDER + category.urlId + '.' + MEDIA_IMG_EXTENSION;
             category.hasChildren = category.children && category.children.length > 0;
+
+            // apply any defined decorations
+            category = categoryDecorator(category);
 
             // we have to do the extend in this order. It's a bit unfortunate
             // because that means that all methods of cc.modelCategory end up

@@ -26,6 +26,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         productBatchResolver    = new sofa.ProductBatchResolver($http, $q, configService),
         singleProductResolver   = new sofa.SingleProductResolver(self, $http, $q, configService),
         productDecorator        = new sofa.ProductDecorator(configService),
+        categoryDecorator       = new sofa.CategoryDecorator(configService),
         pageInfoFactory         = new sofa.PageInfoFactory(configService),
         productByKeyCache       = new sofa.InMemoryObjectStore(),
         productsByCriteriaCache = new sofa.InMemoryObjectStore(),
@@ -33,9 +34,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         categoryMap             = null,
         inFlightCategories      = null;
 
-    var MEDIA_FOLDER            = configService.get('mediaFolder'),
-        MEDIA_IMG_EXTENSION     = configService.get('mediaImgExtension'),
-        MEDIA_PLACEHOLDER       = configService.get('mediaPlaceholder'),
+    var MEDIA_PLACEHOLDER       = configService.get('mediaPlaceholder'),
         USE_SHOP_URLS           = configService.get('useShopUrls', false);
 
     //allow this service to raise events
@@ -339,8 +338,10 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         iterator.iterateChildren(function (category, parent) {
             category.isRoot = category.isRoot || false;
             category.parent = parent;
-            category.image = MEDIA_FOLDER + category.urlId + '.' + MEDIA_IMG_EXTENSION;
             category.hasChildren = category.children && category.children.length > 0;
+
+            // apply any defined decorations
+            category = categoryDecorator(category);
 
             // we have to do the extend in this order. It's a bit unfortunate
             // because that means that all methods of cc.modelCategory end up
@@ -504,6 +505,30 @@ sofa.define('sofa.PageInfoFactory', function (configService) {
     };
 
     return self;
+});
+
+'use strict';
+/* global sofa */
+/**
+ * @name CategoryDecorator
+ * @namespace sofa.CategoryDecorator
+ *
+ * @description
+ * `CategoryDecorator` is used within the`CouchService` to decorate/fix up a category
+ * after it is returned from the server and before it is processed further. This action
+ * takes place before the category is mapped on a `sofa.models.Category`
+ */
+sofa.define('sofa.CategoryDecorator', function (configService) {
+
+    var MEDIA_FOLDER            = configService.get('mediaFolder'),
+        MEDIA_IMG_EXTENSION     = configService.get('mediaImgExtension');
+
+    return function (category) {
+
+        category.image = MEDIA_FOLDER + category.urlId + '.' + MEDIA_IMG_EXTENSION;
+            
+        return category;
+    };
 });
 
 'use strict';
