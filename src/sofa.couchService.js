@@ -148,14 +148,34 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      */
     self.getProducts = function (categoryUrlId, config) {
 
-        var cacheKey = hashService.hashObject({
+        var options = {
             categoryUrlId: categoryUrlId,
             config: config
-        });
+        };
+
+        return self.getProductsByRawOptions(options);
+    };
+
+    /**
+     * @method getProductsByRawOptions
+     * @memberof sofa.CouchService
+     *
+     * @description
+     * Fetches all products of a given option object. This is the lowest level method for
+     * product retrieval. It just hands over the options to the `sofa.ProductBatchResolver`
+     * and let it do the work. Results will automatically be cached for later queries that
+     * share the same options.
+     *
+     * @param {object} options object that will be passed to the `sofa.ProductBatchResolver`.
+     * @preturn {Promise} A promise that gets resolved with products.
+     */
+    self.getProductsByRawOptions = function (options) {
+
+        var cacheKey = hashService.hashObject(options);
 
         if (!productsByCriteriaCache.exists(cacheKey)) {
-            return productBatchResolver(categoryUrlId, config).then(function (productsArray) {
-                var tempProducts = augmentProducts(productsArray, categoryUrlId);
+            return productBatchResolver(options).then(function (productsArray) {
+                var tempProducts = augmentProducts(productsArray, options);
 
                 var indexedProducts = productByKeyCache.addOrUpdateBatch(tempProducts, getUrlKey);
 
@@ -173,17 +193,15 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         return $q.when(productsByCriteriaCache.get(cacheKey));
     };
 
-    var augmentProducts = function (products, categoryUrlId) {
+    var augmentProducts = function (products, options) {
         return products.map(function (product) {
-            return augmentProduct(product, categoryUrlId);
+            return augmentProduct(product, options);
         });
     };
 
-    var augmentProduct = function (product, categoryUrlId) {
+    var augmentProduct = function (product, options) {
         // apply any defined decorations
-        product = productDecorator(product);
-
-        product.categoryUrlId = categoryUrlId;
+        product = productDecorator(product, options);
 
         var fatProduct = sofa.Util.extend(new cc.models.Product({
             mediaPlaceholder: MEDIA_PLACEHOLDER,
@@ -293,7 +311,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
                         // For any other implementation (e.g. elasticsearch based) we expect
                         // augmentProduct to be called for us. Duplicating the work shouldn't have much
                         // performance impact. Let's favor correctness over performance here.
-                        var fatProduct = augmentProduct(product, categoryUrlId);
+                        var fatProduct = augmentProduct(product, { categoryUrlId: categoryUrlId });
 
                         return productByKeyCache.addOrUpdate(productCacheKey, fatProduct);
                     });

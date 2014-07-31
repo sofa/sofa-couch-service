@@ -14,13 +14,13 @@ sofa.define('sofa.ProductBatchResolver', function ($http, $q, configService) {
         API_HTTP_METHOD     = configService.get('apiHttpMethod', 'jsonp'),
         STORE_CODE          = configService.get('storeCode');
 
-    return function (categoryUrlId) {
+    return function (options) {
         return $http({
             method: API_HTTP_METHOD,
             url: API_URL +
             '?&stid=' +
             STORE_CODE +
-            '&cat=' + categoryUrlId +
+            '&cat=' + options.categoryUrlId +
             '&callback=JSON_CALLBACK'
         })
         .then(function (data) {

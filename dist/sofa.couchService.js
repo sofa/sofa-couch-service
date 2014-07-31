@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.9.3 - 2014-07-31
+ * sofa-couch-service - v0.9.3 - 2014-08-01
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
@@ -158,14 +158,34 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      */
     self.getProducts = function (categoryUrlId, config) {
 
-        var cacheKey = hashService.hashObject({
+        var options = {
             categoryUrlId: categoryUrlId,
             config: config
-        });
+        };
+
+        return self.getProductsByRawOptions(options);
+    };
+
+    /**
+     * @method getProductsByRawOptions
+     * @memberof sofa.CouchService
+     *
+     * @description
+     * Fetches all products of a given option object. This is the lowest level method for
+     * product retrieval. It just hands over the options to the `sofa.ProductBatchResolver`
+     * and let it do the work. Results will automatically be cached for later queries that
+     * share the same options.
+     *
+     * @param {object} options object that will be passed to the `sofa.ProductBatchResolver`.
+     * @preturn {Promise} A promise that gets resolved with products.
+     */
+    self.getProductsByRawOptions = function (options) {
+
+        var cacheKey = hashService.hashObject(options);
 
         if (!productsByCriteriaCache.exists(cacheKey)) {
-            return productBatchResolver(categoryUrlId, config).then(function (productsArray) {
-                var tempProducts = augmentProducts(productsArray, categoryUrlId);
+            return productBatchResolver(options).then(function (productsArray) {
+                var tempProducts = augmentProducts(productsArray, options);
 
                 var indexedProducts = productByKeyCache.addOrUpdateBatch(tempProducts, getUrlKey);
 
@@ -183,17 +203,15 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         return $q.when(productsByCriteriaCache.get(cacheKey));
     };
 
-    var augmentProducts = function (products, categoryUrlId) {
+    var augmentProducts = function (products, options) {
         return products.map(function (product) {
-            return augmentProduct(product, categoryUrlId);
+            return augmentProduct(product, options);
         });
     };
 
-    var augmentProduct = function (product, categoryUrlId) {
+    var augmentProduct = function (product, options) {
         // apply any defined decorations
-        product = productDecorator(product);
-
-        product.categoryUrlId = categoryUrlId;
+        product = productDecorator(product, options);
 
         var fatProduct = sofa.Util.extend(new cc.models.Product({
             mediaPlaceholder: MEDIA_PLACEHOLDER,
@@ -303,7 +321,7 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
                         // For any other implementation (e.g. elasticsearch based) we expect
                         // augmentProduct to be called for us. Duplicating the work shouldn't have much
                         // performance impact. Let's favor correctness over performance here.
-                        var fatProduct = augmentProduct(product, categoryUrlId);
+                        var fatProduct = augmentProduct(product, { categoryUrlId: categoryUrlId });
 
                         return productByKeyCache.addOrUpdate(productCacheKey, fatProduct);
                     });
@@ -719,13 +737,13 @@ sofa.define('sofa.ProductBatchResolver', function ($http, $q, configService) {
         API_HTTP_METHOD     = configService.get('apiHttpMethod', 'jsonp'),
         STORE_CODE          = configService.get('storeCode');
 
-    return function (categoryUrlId) {
+    return function (options) {
         return $http({
             method: API_HTTP_METHOD,
             url: API_URL +
             '?&stid=' +
             STORE_CODE +
-            '&cat=' + categoryUrlId +
+            '&cat=' + options.categoryUrlId +
             '&callback=JSON_CALLBACK'
         })
         .then(function (data) {
@@ -746,8 +764,15 @@ sofa.define('sofa.ProductBatchResolver', function ($http, $q, configService) {
  * takes place before the product is mapped on a `sofa.models.Product`
  */
 sofa.define('sofa.ProductDecorator', function () {
-    return function (product) {
+    return function (product, options) {
 
+        // This is a very important augmentation but we need to move it into the
+        // decorator even if that means it's less generic than we might want it to be.
+        // Our old API does not include the categoryUrlId on the product so we can only
+        // set it if it's in the option which in turn limits the area of queries that
+        // are possible. Therefore we moved the logic here and let different implementations
+        // which have the category on the product handle smarter queries.
+        product.categoryUrlId = options && options.categoryUrlId;
         // the backend is sending us prices as strings.
         // we need to fix that up for sorting and other things to work
         product.price = parseFloat(product.price, 10);
