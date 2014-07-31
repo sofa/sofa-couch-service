@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.9.2 - 2014-07-31
+ * sofa-couch-service - v0.9.3 - 2014-07-31
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
