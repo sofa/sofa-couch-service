@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.9.2 - 2014-07-30
+ * sofa-couch-service - v0.9.2 - 2014-07-31
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
@@ -183,22 +183,24 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         return $q.when(productsByCriteriaCache.get(cacheKey));
     };
 
-    //it's a bit akward that we need to do that. It should be adressed
-    //directly on our server API so that this extra processing can be removed.
     var augmentProducts = function (products, categoryUrlId) {
         return products.map(function (product) {
-            // apply any defined decorations
-            product = productDecorator(product);
-
-            product.categoryUrlId = categoryUrlId;
-
-            var fatProduct = sofa.Util.extend(new cc.models.Product({
-                mediaPlaceholder: MEDIA_PLACEHOLDER,
-                useShopUrls: USE_SHOP_URLS
-            }), product);
-            self.emit('productCreated', self, fatProduct);
-            return fatProduct;
+            return augmentProduct(product, categoryUrlId);
         });
+    };
+
+    var augmentProduct = function (product, categoryUrlId) {
+        // apply any defined decorations
+        product = productDecorator(product);
+
+        product.categoryUrlId = categoryUrlId;
+
+        var fatProduct = sofa.Util.extend(new cc.models.Product({
+            mediaPlaceholder: MEDIA_PLACEHOLDER,
+            useShopUrls: USE_SHOP_URLS
+        }), product);
+        self.emit('productCreated', self, fatProduct);
+        return fatProduct;
     };
 
     /**
@@ -291,7 +293,20 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     self.getProduct = function (categoryUrlId, productUrlId) {
         var productCacheKey = categoryUrlId + productUrlId;
         if (!productByKeyCache.exists(productCacheKey)) {
-            return singleProductResolver(categoryUrlId, productUrlId);
+            return singleProductResolver(categoryUrlId, productUrlId)
+                    .then(function (product) {
+
+                        // For the default SingleProductResolver this is superflous extra work
+                        // because it internally calls getProducts(..) which does all this work
+                        // for us behind the scene. But then the default SingleProductResolver
+                        // implementation is just a workaround for a shitty default API. 
+                        // For any other implementation (e.g. elasticsearch based) we expect
+                        // augmentProduct to be called for us. Duplicating the work shouldn't have much
+                        // performance impact. Let's favor correctness over performance here.
+                        var fatProduct = augmentProduct(product, categoryUrlId);
+
+                        return productByKeyCache.addOrUpdate(productCacheKey, fatProduct);
+                    });
         }
         else {
             return $q.when(productByKeyCache.get(productCacheKey));
