@@ -157,6 +157,25 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
+     * @method getProductsById
+     * @memberof sofa.CouchService
+     *
+     * @description
+     * Fetches a collection of products by a collection of productIds.
+     *
+     * @param {array} the collection of productIds to fetch the products for.
+     * @preturn {Promise} A promise that gets resolved with products.
+     */
+    self.getProductsById = function (productIds, config) {
+        var options = {
+            productIds: productIds,
+            config: config
+        };
+
+        return self.getProductsByRawOptions(options);
+    };
+
+    /**
      * @method getProductsByRawOptions
      * @memberof sofa.CouchService
      *

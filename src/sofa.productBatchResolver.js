@@ -15,6 +15,11 @@ sofa.define('sofa.ProductBatchResolver', function ($http, $q, configService) {
         STORE_CODE          = configService.get('storeCode');
 
     return function (options) {
+
+        if (options.productIds) {
+            throw new Error('Batch loading of products by id is not supported. Consider overwriting ProductBatchResolver');
+        }
+
         return $http({
             method: API_HTTP_METHOD,
             url: API_URL +
