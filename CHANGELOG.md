@@ -1,3 +1,12 @@
+<a name="0.10.0"></a>
+## 0.10.0 (2014-08-01)
+
+
+#### Features
+
+* ***:** add getProductsById method ([e1068c36](https://github.com/sofa/sofa-couch-service/commit/e1068c36303738ca05afa86130d7df424882a8bd))
+
+
 <a name="0.9.4"></a>
 ### 0.9.4 (2014-08-01)
 
