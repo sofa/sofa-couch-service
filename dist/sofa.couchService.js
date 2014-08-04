@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.10.0 - 2014-08-01
+ * sofa-couch-service - v0.10.0 - 2014-08-04
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
@@ -114,7 +114,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      * @return {object} The PageInfo object.
      */
     self.createPageInfo = function (entities) {
-        return pageInfoFactory.createPageInfo(entities);
+        return entities ?
+        pageInfoFactory.createPageInfo(entities) : pageInfoFactory.createFirstPageInfo();
     };
 
     /**
@@ -554,6 +555,10 @@ sofa.define('sofa.PageInfoFactory', function (configService) {
      */
     self.createPageInfo = function (entities) {
         return new PageInfo(DEFAULT_PAGE_SIZE, entities.length - DEFAULT_PAGE_SIZE);
+    };
+
+    self.createFirstPageInfo = function () {
+        return new PageInfo(DEFAULT_PAGE_SIZE, 0);
     };
 
     return self;

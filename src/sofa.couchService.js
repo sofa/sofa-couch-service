@@ -104,7 +104,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      * @return {object} The PageInfo object.
      */
     self.createPageInfo = function (entities) {
-        return pageInfoFactory.createPageInfo(entities);
+        return entities ?
+        pageInfoFactory.createPageInfo(entities) : pageInfoFactory.createFirstPageInfo();
     };
 
     /**

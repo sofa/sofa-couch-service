@@ -36,5 +36,9 @@ sofa.define('sofa.PageInfoFactory', function (configService) {
         return new PageInfo(DEFAULT_PAGE_SIZE, entities.length - DEFAULT_PAGE_SIZE);
     };
 
+    self.createFirstPageInfo = function () {
+        return new PageInfo(DEFAULT_PAGE_SIZE, 0);
+    };
+
     return self;
 });
