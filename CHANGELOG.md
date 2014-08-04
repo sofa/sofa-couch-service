@@ -1,3 +1,12 @@
+<a name="0.11.0"></a>
+## 0.11.0 (2014-08-04)
+
+
+#### Features
+
+* ***:** allow creation of first PageInfo ([5d74c396](https://github.com/sofa/sofa-couch-service/commit/5d74c396aaeb1ac9f7a19e455dbda7f3525c8d99))
+
+
 <a name="0.10.0"></a>
 ## 0.10.0 (2014-08-01)
 
