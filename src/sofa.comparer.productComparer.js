@@ -1,8 +1,15 @@
 'use strict';
 /* global sofa */
 /**
- * @name ProductComparer
- * @namespace cc.comparer.ProductComparer
+ * @sofadoc class
+ * @name sofa.comparer.ProductComparer
+ * @namespace sofa.comparer
+ *
+ * @package sofa-couch-service
+ * @requiresPackage sofa-core
+ * @requiresPackage sofa-http-service
+ *
+ * @distFile dist/sofa.checkoutService.js
  *
  * @description
  *

@@ -1,8 +1,16 @@
 'use strict';
 /* global sofa */
 /**
- * @name CategoryMap
- * @namespace sofa.helper.CategoryMap
+ * @sofadoc class
+ * @name sofa.helper.CategoryMap
+ * @namespace sofa.helper
+ *
+ * @package sofa-checkout-service
+ * @requiresPackage sofa-core
+ * @requiresPackage sofa-http-service
+ * @requiresPackage sofa-q-service
+ *
+ * @distFile dist/sofa.CouchService.js
  *
  * @description
  * Category mapping service that sets up mappings between category urls and category
@@ -16,7 +24,8 @@ sofa.define('sofa.util.CategoryMap', function () {
     var map = {};
 
     /**
-     * @method addCategory
+     * @sofadoc method
+     * @name sofa.helper.CategoryMap#addCategory
      * @memberof sofa.helper.CategoryMap
      *
      * @description
@@ -39,7 +48,8 @@ sofa.define('sofa.util.CategoryMap', function () {
     };
 
     /**
-     * @method getCategory
+     * @sofadoc method
+     * @name sofa.helper.CategoryMap#getCategory
      * @memberof sofa.CategoryMap
      *
      * @description
