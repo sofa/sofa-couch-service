@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.11.0 - 2014-08-04
+ * sofa-couch-service - v0.12.0 - 2014-08-05
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
@@ -11,8 +11,19 @@
 'use strict';
 /* global sofa */
 /**
- * @name CouchService
- * @namespace sofa.CouchService
+ * @sofadoc class
+ * @name sofa.CouchService
+ *
+ * @package sofa-couch-service
+ * @requiresPackage sofa-core
+ * @requiresPackage sofa-http-service
+ * @requiresPackage sofa-q-service
+ *
+ * @requires sofa.HttpService
+ * @requires sofa.QService
+ * @requires sofa.configService
+ *
+ * @distFile dist/sofa.couchService.js
  *
  * @description
  * `CouchService` let's you interact with the CouchCommerce API. It provides methods
@@ -41,7 +52,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     sofa.observable.mixin(self);
 
     /**
-     * @method isAChildAliasOfB
+     * @sofadoc method
+     * @name sofa.CouchService#isAChildAliasOfB
      * @memberof sofa.CouchService
      *
      * @description
@@ -66,7 +78,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
-     * @method isAParentOfB
+     * @sofadoc method
+     * @name sofa.CouchService#isAParentOfB
      * @memberof sofa.CouchService
      *
      * @description
@@ -85,7 +98,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
-     * @method isAChildOfB
+     * @sofadoc method
+     * @name sofa.CouchService#isAChildOfB
      * @memberof sofa.CouchService
      *
      * @description
@@ -119,7 +133,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
-     * @method getCategory
+     * @sofadoc method
+     * @name sofa.CouchService#getCategory
      * @memberof sofa.CouchService
      *
      * @description
@@ -148,14 +163,15 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
-     * @method getProducts
+     * @sofadoc method
+     * @name sofa.CouchService#getProducts
      * @memberof sofa.CouchService
      *
      * @description
      * Fetches all products of a given category.
      *
      * @param {int} categoryUrlId The urlId of the category to fetch the products from.
-     * @preturn {Promise} A promise that gets resolved with products.
+     * @return {Promise} A promise that gets resolved with products.
      */
     self.getProducts = function (categoryUrlId, config) {
 
@@ -242,7 +258,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
-     * @method getNextProduct
+     * @sofadoc method
+     * @name sofa.CouchService#getNextProduct
      * @memberof sofa.CouchService
      *
      * @description
@@ -268,7 +285,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
-     * @method getPreviousProduct
+     * @sofadoc method
+     * @name sofa.CouchService#getPreviousProduct
      * @memberof sofa.CouchService
      *
      * @description
@@ -316,7 +334,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     /**
-     * @method getProduct
+     * @sofadoc method
+     * @name sofa.CouchService#getProduct
      * @memberof sofa.CouchService
      *
      * @description
@@ -612,8 +631,15 @@ sofa.define('sofa.CategoryTreeResolver', function ($http, $q, configService) {
 'use strict';
 /* global sofa */
 /**
- * @name ProductComparer
- * @namespace cc.comparer.ProductComparer
+ * @sofadoc class
+ * @name sofa.comparer.ProductComparer
+ * @namespace sofa.comparer
+ *
+ * @package sofa-couch-service
+ * @requiresPackage sofa-core
+ * @requiresPackage sofa-http-service
+ *
+ * @distFile dist/sofa.checkoutService.js
  *
  * @description
  *
@@ -689,8 +715,16 @@ sofa.HashService = function () {
 'use strict';
 /* global sofa */
 /**
- * @name CategoryMap
- * @namespace sofa.helper.CategoryMap
+ * @sofadoc class
+ * @name sofa.helper.CategoryMap
+ * @namespace sofa.helper
+ *
+ * @package sofa-checkout-service
+ * @requiresPackage sofa-core
+ * @requiresPackage sofa-http-service
+ * @requiresPackage sofa-q-service
+ *
+ * @distFile dist/sofa.CouchService.js
  *
  * @description
  * Category mapping service that sets up mappings between category urls and category
@@ -704,7 +738,8 @@ sofa.define('sofa.util.CategoryMap', function () {
     var map = {};
 
     /**
-     * @method addCategory
+     * @sofadoc method
+     * @name sofa.helper.CategoryMap#addCategory
      * @memberof sofa.helper.CategoryMap
      *
      * @description
@@ -727,7 +762,8 @@ sofa.define('sofa.util.CategoryMap', function () {
     };
 
     /**
-     * @method getCategory
+     * @sofadoc method
+     * @name sofa.helper.CategoryMap#getCategory
      * @memberof sofa.CategoryMap
      *
      * @description
