@@ -1,3 +1,12 @@
+<a name="0.13.0"></a>
+## 0.13.0 (2014-09-10)
+
+
+#### Features
+
+* **sofa-couch-service:** products can be fetched with query meta data ([98b77fc8](https://github.com/sofa/sofa-couch-service/commit/98b77fc866c56f585ef1e03c8ec97ac37973fe53))
+
+
 <a name="0.12.0"></a>
 ## 0.12.0 (2014-08-05)
 
