@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.12.0 - 2014-08-05
+ * sofa-couch-service - v0.12.0 - 2014-09-09
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
@@ -220,19 +220,26 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         var cacheKey = hashService.hashObject(options);
 
         if (!productsByCriteriaCache.exists(cacheKey)) {
-            return productBatchResolver(options).then(function (productsArray) {
+            return productBatchResolver(options).then(function (result) {
+                var legacy = sofa.Util.isArray(result);
+                var productsArray = legacy ? result : result.items;
                 var tempProducts = augmentProducts(productsArray, options);
-
                 var indexedProducts = productByKeyCache.addOrUpdateBatch(tempProducts, getUrlKey);
 
                 // if the call did not yield results, don't put an empty array in the cache.
                 // This would prevent further XHRs for this query even if we don't have results
                 if (indexedProducts.length > 0) {
                     // FixMe we are effectively creating a memory leak here by caching all seen products forever
-                    productsByCriteriaCache.addOrUpdate(cacheKey, indexedProducts);
+                    productsByCriteriaCache.addOrUpdate(cacheKey, legacy ? indexedProducts : {
+                        items: indexedProducts,
+                        meta: result.meta
+                    });
                 }
                 
-                return indexedProducts;
+                return legacy ? indexedProducts : {
+                    items: indexedProducts,
+                    meta: result.meta
+                };
             });
         }
 
