@@ -8,16 +8,16 @@
     "description": "Sofa Web SDK couch service component.",
     "main": "dist/sofa.couchService.js",
     "dependencies": {
-        "sofa-core": "0.6.x",
-        "sofa-http-service": "0.2.x",
-        "sofa-q-service": "0.1.x"
+        "sofa-core": "0.13.x",
+        "sofa-http-service": "0.5.x",
+        "sofa-q-service": "0.3.x"
     },
     "devDependencies": {
-        "sofa-testing": "0.2.x",
+        "sofa-testing": "0.7.x",
         "jasmine.async": "~0.1.0"
     },
     "resolutions": {
-        "sofa-core": "0.6.x"
+        "sofa-core": "0.13.x"
     },
     "keywords": [
         "sofa",
