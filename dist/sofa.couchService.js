@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.14.0 - 2014-12-08
+ * sofa-couch-service - v0.14.0 - 2015-01-05
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
@@ -340,6 +340,12 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         return -1;
     };
 
+
+    self.isProductCached = function (categoryUrlId, productUrlId) {
+        var productCacheKey = categoryUrlId + productUrlId;
+        return productByKeyCache.exists(productCacheKey);
+    };
+
     /**
      * @sofadoc method
      * @name sofa.CouchService#getProduct
@@ -356,9 +362,14 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      */
     self.getProduct = function (categoryUrlId, productUrlId) {
         var productCacheKey = categoryUrlId + productUrlId;
-        if (!productByKeyCache.exists(productCacheKey)) {
+        if (!self.isProductCached(categoryUrlId, productUrlId)) {
             return singleProductResolver(categoryUrlId, productUrlId)
                     .then(function (product) {
+
+                        // make sure to return early if no matching product was found
+                        if (!product) {
+                            return product;
+                        }
 
                         // For the default SingleProductResolver this is superflous extra work
                         // because it internally calls getProducts(..) which does all this work
@@ -868,10 +879,11 @@ sofa.define('sofa.SingleProductResolver', function (couchService) {
     return function (categoryUrlId, productUrlKey) {
         return couchService
                 .getProducts(categoryUrlId)
-                .then(function (products) {
-                    // it's important to only call getProduct if the previous call yielded results
-                    // otherwise we will run into an infinite XHR of death.
-                    return products.length > 0 ? couchService.getProduct(categoryUrlId, productUrlKey) : null;
+                .then(function () {
+                    // it's important to only call getProduct if the previous call yielded the requested product
+                    // Otherwise we are running into an infinite loop where we try to fetch the product over and
+                    // over without any luck.
+                    return couchService.isProductCached(categoryUrlId, productUrlKey) ? couchService.getProduct(categoryUrlId, productUrlKey) : null;
                 });
     };
 });

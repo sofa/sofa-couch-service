@@ -13,10 +13,11 @@ sofa.define('sofa.SingleProductResolver', function (couchService) {
     return function (categoryUrlId, productUrlKey) {
         return couchService
                 .getProducts(categoryUrlId)
-                .then(function (products) {
-                    // it's important to only call getProduct if the previous call yielded results
-                    // otherwise we will run into an infinite XHR of death.
-                    return products.length > 0 ? couchService.getProduct(categoryUrlId, productUrlKey) : null;
+                .then(function () {
+                    // it's important to only call getProduct if the previous call yielded the requested product
+                    // Otherwise we are running into an infinite loop where we try to fetch the product over and
+                    // over without any luck.
+                    return couchService.isProductCached(categoryUrlId, productUrlKey) ? couchService.getProduct(categoryUrlId, productUrlKey) : null;
                 });
     };
 });

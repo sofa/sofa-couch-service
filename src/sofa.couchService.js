@@ -330,6 +330,12 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         return -1;
     };
 
+
+    self.isProductCached = function (categoryUrlId, productUrlId) {
+        var productCacheKey = categoryUrlId + productUrlId;
+        return productByKeyCache.exists(productCacheKey);
+    };
+
     /**
      * @sofadoc method
      * @name sofa.CouchService#getProduct
@@ -346,9 +352,14 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      */
     self.getProduct = function (categoryUrlId, productUrlId) {
         var productCacheKey = categoryUrlId + productUrlId;
-        if (!productByKeyCache.exists(productCacheKey)) {
+        if (!self.isProductCached(categoryUrlId, productUrlId)) {
             return singleProductResolver(categoryUrlId, productUrlId)
                     .then(function (product) {
+
+                        // make sure to return early if no matching product was found
+                        if (!product) {
+                            return product;
+                        }
 
                         // For the default SingleProductResolver this is superflous extra work
                         // because it internally calls getProducts(..) which does all this work
