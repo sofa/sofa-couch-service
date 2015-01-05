@@ -1,3 +1,12 @@
+<a name="0.14.1"></a>
+### 0.14.1 (2015-01-05)
+
+
+#### Bug Fixes
+
+* **SingleProductResolver:** avoid infinite loop when requesting unknown products ([759fc7ef](https://github.com/sofa/sofa-couch-service/commit/759fc7ef4fdb489701cf092a633b4848af1acf16))
+
+
 <a name="0.14.0"></a>
 ## 0.14.0 (2014-12-08)
 
