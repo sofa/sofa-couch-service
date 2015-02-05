@@ -4,7 +4,7 @@
     "description": "Sofa Web SDK couch service component.",
     "main": "dist/sofaCouchService.js",
     "scripts": {
-        "test": "bower install && gulp build"
+        "test": "gulp build"
     },
     "engines": {
         "node": ">=0.10.x",
