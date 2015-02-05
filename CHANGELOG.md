@@ -1,3 +1,13 @@
+### 0.14.1 (2015-02-05)
+
+
+#### Features
+
+* **sofa.CouchService:**
+  * adds Angular service ([d84094f8](https://github.com/sofa/sofa-couch-service/commit/d84094f8d2a85d9211c6d70b6f323ef9ff7353a8))
+  * introduces new build process ([c12ee27c](https://github.com/sofa/sofa-couch-service/commit/c12ee27c68c8b5e654a475566ba90a4f0f9f0f80))
+
+
 <a name="0.14.1"></a>
 ### 0.14.1 (2015-01-05)
 

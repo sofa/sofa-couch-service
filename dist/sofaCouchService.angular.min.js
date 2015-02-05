@@ -1,5 +1,5 @@
 /**
- * sofa-couch-service - v0.14.1 - Wed Apr 22 2015 14:15:23 GMT+0200 (CEST)
+ * sofa-couch-service - v0.15.0 - Wed Apr 22 2015 14:16:44 GMT+0200 (CEST)
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
