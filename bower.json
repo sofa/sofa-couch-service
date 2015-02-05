@@ -6,19 +6,7 @@
         "Pascal Precht <pascal@couchcommerce.com>"
     ],
     "description": "Sofa Web SDK couch service component.",
-    "main": "dist/sofa.couchService.js",
-    "dependencies": {
-        "sofa-core": "0.13.x",
-        "sofa-http-service": "0.5.x",
-        "sofa-q-service": "0.3.x"
-    },
-    "devDependencies": {
-        "sofa-testing": "0.7.x",
-        "jasmine.async": "~0.1.0"
-    },
-    "resolutions": {
-        "sofa-core": "0.13.x"
-    },
+    "main": "dist/sofaCouchService.js",
     "keywords": [
         "sofa",
         "sofa.io",
