@@ -1,39 +1,39 @@
 {
-    "name": "sofa-couch-service",
-    "version": "0.14.1",
-    "description": "Sofa Web SDK couch service component.",
-    "main": "dist/sofaCouchService.js",
-    "scripts": {
-        "test": "bower install && gulp build"
-    },
-    "engines": {
-        "node": ">=0.10.x",
-        "npm": ">=1.2.x"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/sofa/sofa-couch-service"
-    },
-    "keywords": [
-        "sofa",
-        "sofa.io",
-        "web",
-        "sdk",
-        "service"
-    ],
-    "author": "Pascal Precht <pascal@couchcommerce.com>",
-    "license": "GPL",
-    "bugs": {
-        "url": "https://github.com/sofa/sofa-couch-service/issues"
-    },
-    "dependencies": {
-        "sofa-core": "0.14.x",
-        "sofa-http-service": "0.5.x",
-        "sofa-q-service": "0.3.x"
-    },
-    "devDependencies": {
-        "gulp": "^3.8.10",
-        "shared-sofa-component-tasks": "^0.7.1",
-        "sofa-testing": "^0.7.0"
-    }
+  "name": "sofa-couch-service",
+  "version": "0.14.1",
+  "description": "Sofa Web SDK couch service component.",
+  "main": "dist/sofaCouchService.js",
+  "scripts": {
+    "test": "bower install && gulp build"
+  },
+  "engines": {
+    "node": ">=0.10.x",
+    "npm": ">=1.2.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sofa/sofa-couch-service"
+  },
+  "keywords": [
+    "sofa",
+    "sofa.io",
+    "web",
+    "sdk",
+    "service"
+  ],
+  "author": "Pascal Precht <pascal@couchcommerce.com>",
+  "license": "GPL",
+  "bugs": {
+    "url": "https://github.com/sofa/sofa-couch-service/issues"
+  },
+  "dependencies": {
+    "sofa-core": "0.14.x",
+    "sofa-http-service": "0.5.x",
+    "sofa-q-service": "0.3.x"
+  },
+  "devDependencies": {
+    "gulp": "^3.8.10",
+    "shared-sofa-component-tasks": "^0.11.0",
+    "sofa-testing": "^0.8.0"
+  }
 }

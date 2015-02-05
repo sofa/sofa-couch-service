@@ -1,6 +1,5 @@
 'use strict';
 /* global sofa */
-/* global SOFA_MOCK_PRODUCTS */
 
 describe('sofa.couchService', function () {
 
@@ -92,7 +91,6 @@ describe('sofa.couchService', function () {
     describe('async-tests', function () {
 
         var httpService;
-            // async = new AsyncSpec(this);
 
         var cats = [
             {
@@ -198,9 +196,7 @@ describe('sofa.couchService', function () {
         });
 
         it('can get root category', function (done) {
-            var url = sofa.Config.categoryJson;
-            httpService.when('get', url).respond(categories);
-
+            httpService.when('post', url).respond(wrapAsResponse(cats));
             couchService
                 .getCategory()
                 .then(function (data) {
@@ -209,31 +205,9 @@ describe('sofa.couchService', function () {
                 });
         });
 
-        it('if a category has aliases it should return the category with children', function (done) {
-            var categoryUrlId = 'child2';
-            var url = cc.Config.categoryJson;
-
-            httpService.when('get', url).respond(categories);
-            couchService
-                .getCategory(categoryUrlId)
-                .then(function (data) {
-                    expect(data.label).toEqual('child 2');
-                    expect(data.children && data.children.length).toBe(2);
-                    done();
-                });
-        });
 
         it('can get products', function (done) {
-            var categoryUrlId = 'root';
-            //it's a bit whack that we have to know the exact URL to mock the http request
-            //but on the other hand, how should it work otherwise?
-            var url = sofa.Config.apiUrl +
-                        '?&stid=' +
-                        sofa.Config.storeCode +
-                        '&cat=' + categoryUrlId +
-                        '&callback=JSON_CALLBACK';
-
-            httpService.when(sofa.Config.apiHttpMethod, url).respond(SOFA_MOCK_PRODUCTS);
+            httpService.when('post', productUrl).respond(wrapAsResponse(products));
             couchService
                 .getProducts()
                 .then(function (data) {
@@ -248,55 +222,9 @@ describe('sofa.couchService', function () {
                 });
         });
 
-        it('removes products that violate duplicate key constraints', function (done) {
-
-            // both products conflict with their urlKey. The urlKey is all we care about
-            // the id is pretty irrelevant for sofa. Sofa has to treat the urlKey like an unique id.
-            var responseWithConflictingKeys = {
-                'queryDetails': {
-                    'category': 'main',
-                    'categoryName': 'Root',
-                    'showSizeFilter': 'true',
-                    'showColorFilter': 'true'
-                },
-                'totalCount': '2',
-                'products': [
-                        {'id': 1036, 'sku': '1172', 'name': 'foo', 'description': 'foo', 'urlKey': 'foo' },
-                        {'id': 1036, 'sku': '1172', 'name': 'foo', 'description': 'foo', 'urlKey': 'foo' }
-                    ]
-                };
-
-            var categoryUrlId = 'root';
-            //it's a bit whack that we have to know the exact URL to mock the http request
-            //but on the other hand, how should it work otherwise?
-            var url = sofa.Config.apiUrl +
-                        '?&stid=' +
-                        sofa.Config.storeCode +
-                        '&cat=' + categoryUrlId +
-                        '&callback=JSON_CALLBACK';
-
-            httpService.when(sofa.Config.apiHttpMethod, url).respond(responseWithConflictingKeys);
-            couchService
-                .getProducts(categoryUrlId)
-                .then(function (data) {
-                    expect(data.length).toBe(1);
-                    done();
-                });
-        });
 
         it('can get a single product', function (done) {
-            var categoryUrlId = 'root';
-            var productUrlId = 'fassbind-vieille-prune-obstbrand-pflaume-40-0-7l-flasche';
-
-            //it's a bit whack that we have to know the exact URL to mock the http request
-            //but on the other hand, how should it work otherwise?
-            var url = sofa.Config.apiUrl +
-                        '?&stid=' +
-                        sofa.Config.storeCode +
-                        '&cat=' + categoryUrlId +
-                        '&callback=JSON_CALLBACK';
-
-            httpService.when(sofa.Config.apiHttpMethod, url).respond(SOFA_MOCK_PRODUCTS);
+            httpService.when('post', singleProductUrl).respond(wrapAsResponse([products[2]]));
 
             couchService
                 .getProduct('3')
@@ -354,228 +282,6 @@ describe('sofa.couchService', function () {
 
                 done();
             });
-        });
-
-        it('can get the next product of the same category (with cached products)', function (done) {
-
-            var categoryUrlId = 'root';
-            var productUrlId = 'fassbind-vieille-prune-obstbrand-pflaume-40-0-7l-flasche';
-
-            //it's a bit whack that we have to know the exact URL to mock the http request
-            //but on the other hand, how should it work otherwise?
-            var url = sofa.Config.apiUrl +
-                        '?&stid=' +
-                        sofa.Config.storeCode +
-                        '&cat=' + categoryUrlId +
-                        '&callback=JSON_CALLBACK';
-
-            httpService.when(sofa.Config.apiHttpMethod, url).respond(SOFA_MOCK_PRODUCTS);
-            couchService
-                .getProduct(categoryUrlId, productUrlId)
-                .then(function (product) {
-                    expect(product.id).toEqual(204);
-
-                    couchService
-                        .getNextProduct(product)
-                        .then(function (nextProduct) {
-                            expect(nextProduct.id).toBe(662);
-                            done();
-                        });
-                });
-        });
-
-        it('can get the next product of the same category (WITHOUT cached products)', function (done) {
-            var categoryUrlId = 'root';
-            var productUrlId = 'fassbind-vieille-prune-obstbrand-pflaume-40-0-7l-flasche';
-
-            //it's a bit whack that we have to know the exact URL to mock the http request
-            //but on the other hand, how should it work otherwise?
-            var url = sofa.Config.apiUrl +
-                        '?&stid=' +
-                        sofa.Config.storeCode +
-                        '&cat=' + categoryUrlId +
-                        '&callback=JSON_CALLBACK';
-
-            httpService.when(sofa.Config.apiHttpMethod, url).respond(SOFA_MOCK_PRODUCTS);
-
-            var product = {
-                urlKey: productUrlId,
-                categoryUrlId: categoryUrlId
-            };
-
-            couchService
-                .getNextProduct(product)
-                .then(function (nextProduct) {
-                    expect(nextProduct.id).toBe(662);
-                    done();
-                });
-        });
-
-        it('returns "null" for the next product when reached the end', function (done) {
-            var categoryUrlId = 'root';
-            var productUrlId = 'fassbind-vieille-framboise-alter-himbeerbrand-obstbrand-40-0-7l-flasche';
-
-            //it's a bit whack that we have to know the exact URL to mock the http request
-            //but on the other hand, how should it work otherwise?
-            var url = sofa.Config.apiUrl +
-                        '?&stid=' +
-                        sofa.Config.storeCode +
-                        '&cat=' + categoryUrlId +
-                        '&callback=JSON_CALLBACK';
-
-            httpService.when(sofa.Config.apiHttpMethod, url).respond(SOFA_MOCK_PRODUCTS);
-
-            couchService
-                .getProduct(categoryUrlId, productUrlId)
-                .then(function (product) {
-                    expect(product.id).toBe(2720);
-
-                    couchService
-                        .getNextProduct(product)
-                        .then(function (nextProduct) {
-                            expect(nextProduct).toBe(null);
-                            done();
-                        });
-                });
-        });
-
-        it('returns the first product of the category for the next product when reached the end and using the circle parameter', function (done) {
-            var categoryUrlId = 'root';
-            var productUrlId = 'fassbind-vieille-framboise-alter-himbeerbrand-obstbrand-40-0-7l-flasche';
-
-            //it's a bit whack that we have to know the exact URL to mock the http request
-            //but on the other hand, how should it work otherwise?
-            var url = sofa.Config.apiUrl +
-                        '?&stid=' +
-                        sofa.Config.storeCode +
-                        '&cat=' + categoryUrlId +
-                        '&callback=JSON_CALLBACK';
-
-            httpService.when(sofa.Config.apiHttpMethod, url).respond(SOFA_MOCK_PRODUCTS);
-
-            couchService
-                .getProduct(categoryUrlId, productUrlId)
-                .then(function (product) {
-                    expect(product.id).toBe(2720);
-
-                    couchService
-                        .getNextProduct(product, true)
-                        .then(function (nextProduct) {
-                            expect(nextProduct.id).toBe(1036);
-                            done();
-                        });
-                });
-        });
-
-        it('can get the previous product of the same category (with cached products)', function (done) {
-            var categoryUrlId = 'root';
-            var productUrlId = 'fassbind-obstbrand-walderdbeeren-reserve-privee-43-0-5-l-flasche';
-
-            //it's a bit whack that we have to know the exact URL to mock the http request
-            //but on the other hand, how should it work otherwise?
-            var url = sofa.Config.apiUrl +
-                        '?&stid=' +
-                        sofa.Config.storeCode +
-                        '&cat=' + categoryUrlId +
-                        '&callback=JSON_CALLBACK';
-
-            httpService.when(sofa.Config.apiHttpMethod, url).respond(SOFA_MOCK_PRODUCTS);
-
-            couchService
-                .getProduct(categoryUrlId, productUrlId)
-                .then(function (product) {
-                    expect(product.id).toBe(662);
-
-                    couchService
-                        .getPreviousProduct(product)
-                        .then(function (nextProduct) {
-                            expect(nextProduct.id).toBe(204);
-                            done();
-                        });
-                });
-        });
-
-        it('can get the previous product of the same category (WITHOUT cached products)', function (done) {
-            var categoryUrlId = 'root';
-            var productUrlId = 'fassbind-obstbrand-walderdbeeren-reserve-privee-43-0-5-l-flasche';
-
-            //it's a bit whack that we have to know the exact URL to mock the http request
-            //but on the other hand, how should it work otherwise?
-            var url = sofa.Config.apiUrl +
-                        '?&stid=' +
-                        sofa.Config.storeCode +
-                        '&cat=' + categoryUrlId +
-                        '&callback=JSON_CALLBACK';
-
-            httpService.when(sofa.Config.apiHttpMethod, url).respond(SOFA_MOCK_PRODUCTS);
-
-            var product = {
-                urlKey: productUrlId,
-                categoryUrlId: categoryUrlId
-            };
-
-            couchService
-                        .getPreviousProduct(product)
-                        .then(function (nextProduct) {
-                            expect(nextProduct.id).toBe(204);
-                            done();
-                        });
-        });
-
-        it('returns null for the previous product when reached the start', function (done) {
-            var categoryUrlId = 'root';
-            var productUrlId = 'fassbind-brut-de-fut-williams-obstbrand-53-2-0-5-l-flasche';
-
-            //it's a bit whack that we have to know the exact URL to mock the http request
-            //but on the other hand, how should it work otherwise?
-            var url = sofa.Config.apiUrl +
-                        '?&stid=' +
-                        sofa.Config.storeCode +
-                        '&cat=' + categoryUrlId +
-                        '&callback=JSON_CALLBACK';
-
-            httpService.when(sofa.Config.apiHttpMethod, url).respond(SOFA_MOCK_PRODUCTS);
-
-            couchService
-                .getProduct(categoryUrlId, productUrlId)
-                .then(function (product) {
-                    expect(product.id).toBe(1036);
-
-                    couchService
-                        .getPreviousProduct(product)
-                        .then(function (nextProduct) {
-                            expect(nextProduct).toBe(null);
-                            done();
-                        });
-                });
-        });
-
-        it('returns the last product of the category for the previous product when reached the start and using the circle parameter', function (done) {
-            var categoryUrlId = 'root';
-            var productUrlId = 'fassbind-brut-de-fut-williams-obstbrand-53-2-0-5-l-flasche';
-
-            //it's a bit whack that we have to know the exact URL to mock the http request
-            //but on the other hand, how should it work otherwise?
-            var url = sofa.Config.apiUrl +
-                        '?&stid=' +
-                        sofa.Config.storeCode +
-                        '&cat=' + categoryUrlId +
-                        '&callback=JSON_CALLBACK';
-
-            httpService.when(sofa.Config.apiHttpMethod, url).respond(SOFA_MOCK_PRODUCTS);
-
-            couchService
-                .getProduct(categoryUrlId, productUrlId)
-                .then(function (product) {
-                    expect(product.id).toBe(1036);
-
-                    couchService
-                        .getPreviousProduct(product, true)
-                        .then(function (nextProduct) {
-                            expect(nextProduct.id).toBe(2720);
-                            done();
-                        });
-                });
         });
     });
 });
