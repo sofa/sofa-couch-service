@@ -1,6 +1,5 @@
 'use strict';
 /* global sofa */
-/* global AsyncSpec */
 /* global SOFA_MOCK_PRODUCTS */
 
 describe('sofa.couchService', function () {
@@ -108,8 +107,8 @@ describe('sofa.couchService', function () {
 
     describe('async-tests', function () {
 
-        var httpService,
-            async = new AsyncSpec(this);
+        var httpService;
+            // async = new AsyncSpec(this);
 
         var categories = {
             'label': 'root',
@@ -139,7 +138,7 @@ describe('sofa.couchService', function () {
             couchService = new sofa.CouchService(httpService, q, configService);
         });
 
-        async.it('can get category', function (done) {
+        it('can get category', function (done) {
             var categoryUrlId = 'child1';
             var url = sofa.Config.categoryJson;
 
@@ -151,7 +150,7 @@ describe('sofa.couchService', function () {
             });
         });
 
-        async.it('can get root category', function (done) {
+        it('can get root category', function (done) {
 
             var url = sofa.Config.categoryJson;
             httpService.when('get', url).respond(categories);
@@ -164,7 +163,7 @@ describe('sofa.couchService', function () {
                 });
         });
 
-        async.it('if a category has aliases it should return the category with children', function (done) {
+        it('if a category has aliases it should return the category with children', function (done) {
             var categoryUrlId = 'child2';
             var url = cc.Config.categoryJson;
 
@@ -178,7 +177,7 @@ describe('sofa.couchService', function () {
                 });
         });
 
-        async.it('can get products', function (done) {
+        it('can get products', function (done) {
             var categoryUrlId = 'root';
             //it's a bit whack that we have to know the exact URL to mock the http request
             //but on the other hand, how should it work otherwise?
@@ -197,7 +196,7 @@ describe('sofa.couchService', function () {
                 });
         });
 
-        async.it('removes products that violate duplicate key constraints', function (done) {
+        it('removes products that violate duplicate key constraints', function (done) {
 
             // both products conflict with their urlKey. The urlKey is all we care about
             // the id is pretty irrelevant for sofa. Sofa has to treat the urlKey like an unique id.
@@ -233,7 +232,7 @@ describe('sofa.couchService', function () {
                 });
         });
 
-        async.it('can get a single product', function (done) {
+        it('can get a single product', function (done) {
             var categoryUrlId = 'root';
             var productUrlId = 'fassbind-vieille-prune-obstbrand-pflaume-40-0-7l-flasche';
 
@@ -255,7 +254,7 @@ describe('sofa.couchService', function () {
                 });
         });
 
-        async.it('product instances of same products are always equal', function (done) {
+        it('product instances of same products are always equal', function (done) {
             var firstBatch, secondBatch, singleProduct;
 
             var url = sofa.Config.apiUrl +
@@ -310,7 +309,7 @@ describe('sofa.couchService', function () {
             });
         });
 
-        async.it('can get the next product of the same category (with cached products)', function (done) {
+        it('can get the next product of the same category (with cached products)', function (done) {
 
             var categoryUrlId = 'root';
             var productUrlId = 'fassbind-vieille-prune-obstbrand-pflaume-40-0-7l-flasche';
@@ -338,7 +337,7 @@ describe('sofa.couchService', function () {
                 });
         });
 
-        async.it('can get the next product of the same category (WITHOUT cached products)', function (done) {
+        it('can get the next product of the same category (WITHOUT cached products)', function (done) {
             var categoryUrlId = 'root';
             var productUrlId = 'fassbind-vieille-prune-obstbrand-pflaume-40-0-7l-flasche';
 
@@ -365,7 +364,7 @@ describe('sofa.couchService', function () {
                 });
         });
 
-        async.it('returns "null" for the next product when reached the end', function (done) {
+        it('returns "null" for the next product when reached the end', function (done) {
             var categoryUrlId = 'root';
             var productUrlId = 'fassbind-vieille-framboise-alter-himbeerbrand-obstbrand-40-0-7l-flasche';
 
@@ -393,7 +392,7 @@ describe('sofa.couchService', function () {
                 });
         });
 
-        async.it('returns the first product of the category for the next product when reached the end and using the circle parameter', function (done) {
+        it('returns the first product of the category for the next product when reached the end and using the circle parameter', function (done) {
             var categoryUrlId = 'root';
             var productUrlId = 'fassbind-vieille-framboise-alter-himbeerbrand-obstbrand-40-0-7l-flasche';
 
@@ -421,7 +420,7 @@ describe('sofa.couchService', function () {
                 });
         });
 
-        async.it('can get the previous product of the same category (with cached products)', function (done) {
+        it('can get the previous product of the same category (with cached products)', function (done) {
             var categoryUrlId = 'root';
             var productUrlId = 'fassbind-obstbrand-walderdbeeren-reserve-privee-43-0-5-l-flasche';
 
@@ -449,7 +448,7 @@ describe('sofa.couchService', function () {
                 });
         });
 
-        async.it('can get the previous product of the same category (WITHOUT cached products)', function (done) {
+        it('can get the previous product of the same category (WITHOUT cached products)', function (done) {
             var categoryUrlId = 'root';
             var productUrlId = 'fassbind-obstbrand-walderdbeeren-reserve-privee-43-0-5-l-flasche';
 
@@ -476,7 +475,7 @@ describe('sofa.couchService', function () {
                         });
         });
 
-        async.it('returns null for the previous product when reached the start', function (done) {
+        it('returns null for the previous product when reached the start', function (done) {
             var categoryUrlId = 'root';
             var productUrlId = 'fassbind-brut-de-fut-williams-obstbrand-53-2-0-5-l-flasche';
 
@@ -504,7 +503,7 @@ describe('sofa.couchService', function () {
                 });
         });
 
-        async.it('returns the last product of the category for the previous product when reached the start and using the circle parameter', function (done) {
+        it('returns the last product of the category for the previous product when reached the start and using the circle parameter', function (done) {
             var categoryUrlId = 'root';
             var productUrlId = 'fassbind-brut-de-fut-williams-obstbrand-53-2-0-5-l-flasche';
 

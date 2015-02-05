@@ -1,12 +1,230 @@
 /**
- * sofa-couch-service - v0.14.1 - 2015-01-05
+ * sofa-couch-service - v0.14.1 - Thu Feb 05 2015 11:16:39 GMT+0100 (CET)
  * 
  *
  * Copyright (c) 2014 CouchCommerce GmbH (http://www.couchcommerce.com / http://www.sofa.io) and other contributors
- * THIS SOFTWARE CONTAINS COMPONENTS OF THE SOFA.IO COUCHCOMMERCE SDK (WWW.SOFA.IO).
+ * THIS SOFTWARE CONTAINS COMPONENTS OF THE SOFA.IO COUCHCOMMERCE SDK (WWW.SOFA.IO)
  * IT IS PROVIDED UNDER THE LICENSE TERMS OF THE ATTACHED LICENSE.TXT.
  */
-;(function (sofa, undefined) {
+;(function (sofa, document, undefined) {
+'use strict';
+/* global sofa */
+
+/**
+ * @name InMemoryObjectStore
+ * @namespace sofa.InMemoryObjectStore
+ *
+ * @description
+ * A simple object store that allows storing, updating objects in memory.
+ * The object store asures that updated objects will always keep the instance
+ * that was created first. In other words, objects are patched to be updated
+ * rather than replaced.
+ */
+sofa.InMemoryObjectStore = function () {
+
+    var self = {},
+        cache = {};
+
+    /**
+     * @method addOrUpdate
+     * @memberof sofa.InMemoryObjectStore
+     *
+     * @description
+     * Adds or updates an object in the store. For updates, it is guaranteed that no
+     * new instance is created. The initial instance is patched
+     *
+     * @param {key} Key of the object to add/update
+     * @param {item} The object to add/update
+     * @preturn {object} The stored object
+     */
+    self.addOrUpdate = function (key, item) {
+
+        if (!cache[key]) {
+            cache[key] = item;
+        }
+        else {
+            sofa.Util.extend(cache[key], item);
+        }
+
+        return cache[key];
+    };
+
+    /**
+     * @method addOrUpdateBatch
+     * @memberof sofa.InMemoryObjectStore
+     *
+     * @description
+     * Adds or updates a batch of objects in the store. For updates, it is guaranteed that no
+     * new instance are created. The initial instances are patched
+     *
+     * @param {batch} array of objects to add/update
+     * @param {keyExctractor} A function to extract the key of each item in the batch
+     * @preturn {array} An array containing each created/updated instance
+     */
+    self.addOrUpdateBatch = function (batch, keyExtractor) {
+        var added = [];
+        var keys = {};
+
+        batch.forEach(function (item) {
+            var key = keyExtractor(item);
+
+            // it is not allowed for one batch to contain multiple objects
+            // with the same key
+            if (!keys[key]) {
+                var updatedItem = self.addOrUpdate(key, item);
+                added.push(updatedItem);
+                keys[key] = true;
+            }
+        });
+
+        return added;
+    };
+
+    /**
+     * @method get
+     * @memberof sofa.InMemoryObjectStore
+     *
+     * @description
+     * Retrieves an object from the store
+     *
+     * @param {key} The key of the object to retrieve
+     * @preturn {object} The retrieved object
+     */
+    self.get = function (key) {
+        return cache[key];
+    };
+
+    /**
+     * @method exists
+     * @memberof sofa.InMemoryObjectStore
+     *
+     * @description
+     * Checks if an object exists in the store
+     *
+     * @param {key} The key of the object to check for existence
+     * @preturn {boolean} A boolean to indicate whether the object exists or not
+     */
+    self.exists = function (key) {
+        return self.get(key) !== undefined;
+    };
+
+    return self;
+};
+'use strict';
+/* global sofa */
+/**
+ * @name PageInfoFactory
+ * @namespace sofa.PageInfoFactory
+ *
+ * @description
+ * The `PageInfoFactory` is used to create `PageInfo` objects which encapsulate paging data.
+ */
+sofa.define('sofa.PageInfoFactory', function (configService) {
+    var DEFAULT_PAGE_SIZE = configService.get('defaultPageSize', 10);
+
+    var PageInfo = function (size, from) {
+        this.size = size;
+        this.from = from;
+    };
+
+    PageInfo.prototype.next = function () {
+        this.from = this.from + this.size;
+        return this;
+    };
+
+    var self = {};
+
+    /**
+     * @method createPageInfo
+     * @memberof sofa.PageInfoFactory
+     *
+     * @description
+     * Creates a PageInfo object from a batch of an array of entities
+     *
+     * @param {entities} The array of entities representing the entire set
+     * @return {object} The PageInfo object
+     */
+    self.createPageInfo = function (entities) {
+        return new PageInfo(DEFAULT_PAGE_SIZE, entities.length - DEFAULT_PAGE_SIZE);
+    };
+
+    self.createFirstPageInfo = function () {
+        return new PageInfo(DEFAULT_PAGE_SIZE, 0);
+    };
+
+    return self;
+});
+
+'use strict';
+/* global sofa */
+/**
+ * @name CategoryDecorator
+ * @namespace sofa.CategoryDecorator
+ *
+ * @description
+ * `CategoryDecorator` is used within the`CouchService` to decorate/fix up a category
+ * after it is returned from the server and before it is processed further. This action
+ * takes place before the category is mapped on a `sofa.models.Category`
+ */
+sofa.define('sofa.CategoryDecorator', function (configService) {
+
+    var MEDIA_FOLDER            = configService.get('mediaFolder'),
+        MEDIA_IMG_EXTENSION     = configService.get('mediaImgExtension');
+
+    return function (category) {
+
+        category.image = MEDIA_FOLDER + category.urlId + '.' + MEDIA_IMG_EXTENSION;
+            
+        return category;
+    };
+});
+
+'use strict';
+/* global sofa */
+/**
+ * @name CategoryTreeResolver
+ * @namespace sofa.CategoryTreeResolver
+ *
+ * @description
+ * `CategoryTreeResolver` is used within the`CouchService` to resolve the tree of categories.
+ * It can easily be overwritten to swap out the resolve strategy.
+ */
+sofa.define('sofa.CategoryTreeResolver', function ($http, $q, configService) {
+    var CATEGORY_JSON = configService.get('categoryJson');
+
+    return function () {
+        return $http({
+            method: 'get',
+            url: CATEGORY_JSON
+        });
+    };
+});
+
+'use strict';
+/* global sofa */
+/**
+ * @sofadoc class
+ * @name sofa.comparer.ProductComparer
+ * @namespace sofa.comparer
+ *
+ * @package sofa-couch-service
+ * @requiresPackage sofa-core
+ * @requiresPackage sofa-http-service
+ *
+ * @distFile dist/sofa.checkoutService.js
+ *
+ * @description
+ *
+ */
+sofa.define('sofa.comparer.ProductComparer', function () {
+    return function (a, b) {
+
+        //either compare products by object identity, urlKey identity or id identity
+        return  a === b ||
+                a.urlKey && b.urlKey && a.urlKey === b.urlKey ||
+                a.id && b.id && a.id === b.id;
+    };
+});
 
 'use strict';
 /* global sofa */
@@ -455,225 +673,6 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
 
 'use strict';
 /* global sofa */
-
-/**
- * @name InMemoryObjectStore
- * @namespace sofa.InMemoryObjectStore
- *
- * @description
- * A simple object store that allows storing, updating objects in memory.
- * The object store asures that updated objects will always keep the instance
- * that was created first. In other words, objects are patched to be updated
- * rather than replaced.
- */
-sofa.InMemoryObjectStore = function () {
-
-    var self = {},
-        cache = {};
-
-    /**
-     * @method addOrUpdate
-     * @memberof sofa.InMemoryObjectStore
-     *
-     * @description
-     * Adds or updates an object in the store. For updates, it is guaranteed that no
-     * new instance is created. The initial instance is patched
-     *
-     * @param {key} Key of the object to add/update
-     * @param {item} The object to add/update
-     * @preturn {object} The stored object
-     */
-    self.addOrUpdate = function (key, item) {
-
-        if (!cache[key]) {
-            cache[key] = item;
-        }
-        else {
-            sofa.Util.extend(cache[key], item);
-        }
-
-        return cache[key];
-    };
-
-    /**
-     * @method addOrUpdateBatch
-     * @memberof sofa.InMemoryObjectStore
-     *
-     * @description
-     * Adds or updates a batch of objects in the store. For updates, it is guaranteed that no
-     * new instance are created. The initial instances are patched
-     *
-     * @param {batch} array of objects to add/update
-     * @param {keyExctractor} A function to extract the key of each item in the batch
-     * @preturn {array} An array containing each created/updated instance
-     */
-    self.addOrUpdateBatch = function (batch, keyExtractor) {
-        var added = [];
-        var keys = {};
-
-        batch.forEach(function (item) {
-            var key = keyExtractor(item);
-
-            // it is not allowed for one batch to contain multiple objects
-            // with the same key
-            if (!keys[key]) {
-                var updatedItem = self.addOrUpdate(key, item);
-                added.push(updatedItem);
-                keys[key] = true;
-            }
-        });
-
-        return added;
-    };
-
-    /**
-     * @method get
-     * @memberof sofa.InMemoryObjectStore
-     *
-     * @description
-     * Retrieves an object from the store
-     *
-     * @param {key} The key of the object to retrieve
-     * @preturn {object} The retrieved object
-     */
-    self.get = function (key) {
-        return cache[key];
-    };
-
-    /**
-     * @method exists
-     * @memberof sofa.InMemoryObjectStore
-     *
-     * @description
-     * Checks if an object exists in the store
-     *
-     * @param {key} The key of the object to check for existence
-     * @preturn {boolean} A boolean to indicate whether the object exists or not
-     */
-    self.exists = function (key) {
-        return self.get(key) !== undefined;
-    };
-
-    return self;
-};
-'use strict';
-/* global sofa */
-/**
- * @name PageInfoFactory
- * @namespace sofa.PageInfoFactory
- *
- * @description
- * The `PageInfoFactory` is used to create `PageInfo` objects which encapsulate paging data.
- */
-sofa.define('sofa.PageInfoFactory', function (configService) {
-    var DEFAULT_PAGE_SIZE = configService.get('defaultPageSize', 10);
-
-    var PageInfo = function (size, from) {
-        this.size = size;
-        this.from = from;
-    };
-
-    PageInfo.prototype.next = function () {
-        this.from = this.from + this.size;
-        return this;
-    };
-
-    var self = {};
-
-    /**
-     * @method createPageInfo
-     * @memberof sofa.PageInfoFactory
-     *
-     * @description
-     * Creates a PageInfo object from a batch of an array of entities
-     *
-     * @param {entities} The array of entities representing the entire set
-     * @return {object} The PageInfo object
-     */
-    self.createPageInfo = function (entities) {
-        return new PageInfo(DEFAULT_PAGE_SIZE, entities.length - DEFAULT_PAGE_SIZE);
-    };
-
-    self.createFirstPageInfo = function () {
-        return new PageInfo(DEFAULT_PAGE_SIZE, 0);
-    };
-
-    return self;
-});
-
-'use strict';
-/* global sofa */
-/**
- * @name CategoryDecorator
- * @namespace sofa.CategoryDecorator
- *
- * @description
- * `CategoryDecorator` is used within the`CouchService` to decorate/fix up a category
- * after it is returned from the server and before it is processed further. This action
- * takes place before the category is mapped on a `sofa.models.Category`
- */
-sofa.define('sofa.CategoryDecorator', function (configService) {
-
-    var MEDIA_FOLDER            = configService.get('mediaFolder'),
-        MEDIA_IMG_EXTENSION     = configService.get('mediaImgExtension');
-
-    return function (category) {
-
-        category.image = MEDIA_FOLDER + category.urlId + '.' + MEDIA_IMG_EXTENSION;
-            
-        return category;
-    };
-});
-
-'use strict';
-/* global sofa */
-/**
- * @name CategoryTreeResolver
- * @namespace sofa.CategoryTreeResolver
- *
- * @description
- * `CategoryTreeResolver` is used within the`CouchService` to resolve the tree of categories.
- * It can easily be overwritten to swap out the resolve strategy.
- */
-sofa.define('sofa.CategoryTreeResolver', function ($http, $q, configService) {
-    var CATEGORY_JSON = configService.get('categoryJson');
-
-    return function () {
-        return $http({
-            method: 'get',
-            url: CATEGORY_JSON
-        });
-    };
-});
-
-'use strict';
-/* global sofa */
-/**
- * @sofadoc class
- * @name sofa.comparer.ProductComparer
- * @namespace sofa.comparer
- *
- * @package sofa-couch-service
- * @requiresPackage sofa-core
- * @requiresPackage sofa-http-service
- *
- * @distFile dist/sofa.checkoutService.js
- *
- * @description
- *
- */
-sofa.define('sofa.comparer.ProductComparer', function () {
-    return function (a, b) {
-
-        //either compare products by object identity, urlKey identity or id identity
-        return  a === b ||
-                a.urlKey && b.urlKey && a.urlKey === b.urlKey ||
-                a.id && b.id && a.id === b.id;
-    };
-});
-
-'use strict';
-/* global sofa */
 /*jshint bitwise: false*/
 
 /**
@@ -887,5 +886,4 @@ sofa.define('sofa.SingleProductResolver', function (couchService) {
                 });
     };
 });
-
-} (sofa));
+}(sofa, document));
