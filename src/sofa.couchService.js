@@ -22,7 +22,6 @@
 sofa.define('sofa.CouchService', function ($http, $q, configService) {
 
     var self                    = {},
-        productComparer         = new sofa.comparer.ProductComparer(),
         categoryTreeResolver    = new sofa.CategoryTreeResolver($http, $q, configService),
         productBatchResolver    = new sofa.ProductBatchResolver($http, $q, configService),
         singleProductResolver   = new sofa.SingleProductResolver(self, $http, $q, configService),
@@ -40,32 +39,6 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
 
     //allow this service to raise events
     sofa.observable.mixin(self);
-
-    /**
-     * @sofadoc method
-     * @name sofa.CouchService#isAChildAliasOfB
-     * @memberof sofa.CouchService
-     *
-     * @description
-     * Checks whether a given category a exists as an child
-     * on another category b. Taking only direct childs into account.
-     *
-     * @param {object} a Category a.
-     * @param {object} b Category b.
-     *
-     * @return {boolean}
-     */
-    self.isAChildAliasOfB = function (categoryA, categoryB) {
-        if (!categoryB.children || categoryB.children.length === 0) {
-            return false;
-        }
-
-        var alias = sofa.Util.find(categoryB.children, function (child) {
-            return child.urlId === categoryA.urlId;
-        });
-
-        return !sofa.Util.isUndefined(alias);
-    };
 
     /**
      * @sofadoc method
@@ -128,28 +101,24 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      * @memberof sofa.CouchService
      *
      * @description
-     * Fetches the category with the given `categoryUrlId` If no category is
+     * Fetches the category with the given `categoryId` If no category is
      * specified, the method defaults to the root category.
      *
-     * @param {object} categoryUrlId The category to be fetched.
+     * @param {string} categoryId The ID of the category to be fetched.
      * @return {Promise} A promise.
      */
-    self.getCategory = function (category) {
-        if (!category && !categoryMap) {
+    self.getCategory = function (categoryId) {
+        if (!categoryId && !categoryMap) {
             return fetchAllCategories();
-        } else if (!category && categoryMap) {
+        } else if (!categoryId && categoryMap) {
             return $q.when(categoryMap.rootCategory);
-        } else if (category && category.length > 0 && !categoryMap) {
+        } else if (categoryId && categoryId.length > 0 && !categoryMap) {
             return fetchAllCategories().then(function () {
-                return categoryMap.getCategory(category);
+                return categoryMap.getCategory(categoryId);
             });
-        } else if (category && category.length > 0 && categoryMap) {
-            return $q.when(categoryMap.getCategory(category));
+        } else if (categoryId && categoryId.length > 0 && categoryMap) {
+            return $q.when(categoryMap.getCategory(categoryId));
         }
-    };
-
-    var getUrlKey = function (product) {
-        return product.categoryUrlId + product.urlKey;
     };
 
     /**
@@ -160,13 +129,13 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
      * @description
      * Fetches all products of a given category.
      *
-     * @param {int} categoryUrlId The urlId of the category to fetch the products from.
+     * @param {int} categoryId The id of the category to fetch the products from.
      * @return {Promise} A promise that gets resolved with products.
      */
-    self.getProducts = function (categoryUrlId, config) {
+    self.getProducts = function (categoryId, config) {
 
         var options = {
-            categoryUrlId: categoryUrlId,
+            categoryId: categoryId,
             config: config
         };
 
@@ -209,12 +178,17 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
 
         var cacheKey = hashService.hashObject(options);
 
+
+        var getProductId = function (product) {
+            return product.id;
+        };
+
         if (!productsByCriteriaCache.exists(cacheKey)) {
             return productBatchResolver(options).then(function (result) {
                 var legacy = sofa.Util.isArray(result);
                 var productsArray = legacy ? result : result.items;
                 var tempProducts = augmentProducts(productsArray, options);
-                var indexedProducts = productByKeyCache.addOrUpdateBatch(tempProducts, getUrlKey);
+                var indexedProducts = productByKeyCache.addOrUpdateBatch(tempProducts, getProductId);
 
                 // if the call did not yield results, don't put an empty array in the cache.
                 // This would prevent further XHRs for this query even if we don't have results
@@ -242,9 +216,9 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
         });
     };
 
-    var augmentProduct = function (product, options) {
+    var augmentProduct = function (product) {
         // apply any defined decorations
-        product = productDecorator(product, options);
+        product = productDecorator(product);
 
         var fatProduct = sofa.Util.extend(new cc.models.Product({
             mediaPlaceholder: MEDIA_PLACEHOLDER,
@@ -256,104 +230,20 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
 
     /**
      * @sofadoc method
-     * @name sofa.CouchService#getNextProduct
-     * @memberof sofa.CouchService
-     *
-     * @description
-     * Fetches the next product within the product's category.
-     *
-     * @param {object} product The product to find the neighbour of.
-     * @return {object} Next product.
-     */
-    self.getNextProduct = function (product, circle) {
-
-        var getTargetProduct = function (categoryProducts) {
-            var index = getIndexOfProduct(categoryProducts, product);
-            if (index > -1) {
-                var nextProduct = categoryProducts[index + 1];
-                var targetProduct = !nextProduct && circle ?
-                                    categoryProducts[0] : nextProduct || null;
-
-                return targetProduct;
-            }
-        };
-
-        return getPreviousOrNextProduct(product, circle, getTargetProduct);
-    };
-
-    /**
-     * @sofadoc method
-     * @name sofa.CouchService#getPreviousProduct
-     * @memberof sofa.CouchService
-     *
-     * @description
-     * Fetches the previous product within the product's category.
-     *
-     * @param {object} product The product to find the neighbour of.
-     * @return {object} Previous product.
-     */
-    self.getPreviousProduct = function (product, circle) {
-
-        var getTargetProduct = function (categoryProducts, baseProduct) {
-            var index = getIndexOfProduct(categoryProducts, baseProduct);
-            if (index > -1) {
-                var previousProduct = categoryProducts[index - 1];
-                var targetProduct = !previousProduct && circle ?
-                                    categoryProducts[categoryProducts.length - 1] :
-                                    previousProduct || null;
-
-                return targetProduct;
-            }
-        };
-
-        return getPreviousOrNextProduct(product, circle, getTargetProduct);
-    };
-
-    var getPreviousOrNextProduct = function (product, circle, productFindFn) {
-        var cachedProducts = productsByCriteriaCache.get(product.categoryUrlId);
-
-        if (cachedProducts) {
-            return $q.when(productFindFn(cachedProducts, product));
-        } else {
-            return  self.getProducts(product.categoryUrlId).then(function (catProducts) {
-                return productFindFn(catProducts, product);
-            });
-        }
-    };
-
-    var getIndexOfProduct = function (productTable, product) {
-        for (var i = 0; i < productTable.length; i++) {
-            if (productComparer(productTable[i], product)) {
-                return i;
-            }
-        }
-        return -1;
-    };
-
-
-    self.isProductCached = function (categoryUrlId, productUrlId) {
-        var productCacheKey = categoryUrlId + productUrlId;
-        return productByKeyCache.exists(productCacheKey);
-    };
-
-    /**
-     * @sofadoc method
      * @name sofa.CouchService#getProduct
      * @memberof sofa.CouchService
      *
      * @description
-     * Fetches a single product. Notice that both the `categoryUrlId`
-     * and the `productUrlId` need to be specified in order to get the product.
+     * Fetches a single product. 
      *
-     * @param {int} categoryUrlId The urlId of the category the product belongs to.
-     * @param {int} productUrlId The urlId of the product itself.
+     * @param {int} id of the product.
      *
      * @return {object} product
      */
-    self.getProduct = function (categoryUrlId, productUrlId) {
-        var productCacheKey = categoryUrlId + productUrlId;
-        if (!self.isProductCached(categoryUrlId, productUrlId)) {
-            return singleProductResolver(categoryUrlId, productUrlId)
+
+    self.getProduct = function (id) {
+        if (!productByKeyCache.exists(id)) {
+            return singleProductResolver(id)
                     .then(function (product) {
 
                         // make sure to return early if no matching product was found
@@ -368,13 +258,13 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
                         // For any other implementation (e.g. elasticsearch based) we expect
                         // augmentProduct to be called for us. Duplicating the work shouldn't have much
                         // performance impact. Let's favor correctness over performance here.
-                        var fatProduct = augmentProduct(product, { categoryUrlId: categoryUrlId });
+                        var fatProduct = augmentProduct(product);
 
-                        return productByKeyCache.addOrUpdate(productCacheKey, fatProduct);
+                        return productByKeyCache.addOrUpdate(id, fatProduct);
                     });
         }
         else {
-            return $q.when(productByKeyCache.get(productCacheKey));
+            return $q.when(productByKeyCache.get(id));
         }
     };
 
@@ -408,8 +298,8 @@ sofa.define('sofa.CouchService', function ($http, $q, configService) {
     };
 
     var augmentCategories = function (rootCategory) {
-        //we need to fix the urlId for the rootCategory to be empty
-        rootCategory.urlId = '';
+        //we need to fix the id for the rootCategory to be empty
+        rootCategory.id = '';
         rootCategory.isRoot = true;
 
         self.emit('categoryCreated', self, rootCategory);

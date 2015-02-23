@@ -16,7 +16,7 @@ sofa.define('sofa.CategoryDecorator', function (configService) {
 
     return function (category) {
 
-        category.image = MEDIA_FOLDER + category.urlId + '.' + MEDIA_IMG_EXTENSION;
+        category.image = MEDIA_FOLDER + category.id + '.' + MEDIA_IMG_EXTENSION;
             
         return category;
     };

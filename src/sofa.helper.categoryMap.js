@@ -34,16 +34,8 @@ sofa.define('sofa.util.CategoryMap', function () {
      * @param {object} category A category object
      */
     self.addCategory = function (category) {
-        if (!map[category.urlId]) {
-            map[category.urlId] = category;
-        } else {
-            //if we had this category before but now have another one aliased with the same id
-            //we have to look if this one has children. If it has children, than it should have
-            //precedence
-
-            if (category.children && category.children.length > 0) {
-                map[category.urlId] = category;
-            }
+        if (!map[category.id]) {
+            map[category.id] = category;
         }
     };
 
@@ -53,14 +45,14 @@ sofa.define('sofa.util.CategoryMap', function () {
      * @memberof sofa.CategoryMap
      *
      * @description
-     * Returns a category by a given `urlId` from the map.
+     * Returns a category by a given `id` from the map.
      *
-     * @param {int} urlId Category url id.
+     * @param {int} id of the Category.
      *
      * @return {object} Category object.
      */
-    self.getCategory = function (urlId) {
-        return map[urlId];
+    self.getCategory = function (id) {
+        return map[id];
     };
 
     return self;

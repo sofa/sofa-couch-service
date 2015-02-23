@@ -13,6 +13,7 @@ module.exports = function (karma) {
             'node_modules/sofa-q-service/dist/sofa.qService.js',
             'node_modules/sofa-http-service/dist/sofa.httpService.js',
             'src/**/*.js',
+            'node_modules/sofa-testing/helpers/md5.js',
             'node_modules/sofa-testing/mocks/sofa.config.mock.js',
             'node_modules/sofa-testing/mocks/sofa.products.mock.js',
             'node_modules/sofa-testing/mocks/sofa.httpService.mock.js',
